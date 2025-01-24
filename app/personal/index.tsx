@@ -131,7 +131,7 @@ const DoctorRegistrationForm = () => {
 
   
   const goback = () => {
-    router.push('/(tabs)/home');
+    router.push('/(tabs)/profile');
   };
 
   

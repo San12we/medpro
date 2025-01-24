@@ -58,7 +58,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="inbox"
+        name="wallet"
         options={{
           tabBarIcon: ({ focused }) => <CustomTabIcon source={InboxImg} focused={focused} />,
           tabBarLabel: 'Wallet',

@@ -2,10 +2,15 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { styles } from './Style/TaskStyle';
+
+import FeatherIcon from '@expo/vector-icons/Feather';
+import { Feather as Icon } from '@expo/vector-icons';
 import { notificationImg, UserProfile, AddImg } from '../../theme/Images';
 import { Agenda, calendarTheme } from 'react-native-calendars';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {LinearGradient} from 'expo-linear-gradient';
 import { TaskContext } from '../../context/TaskContext';
+
 
 export default function Task() {
   const router = useRouter();
@@ -13,23 +18,25 @@ export default function Task() {
   const [profileImage, setProfileImage] = useState(null);
   const [username, setUsername] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [user, setUser] = useState({ fullName: '', email: '', profileImage: '' });
 
   useEffect(() => {
-    const loadProfileData = async () => {
-      try {
-        const storedProfileImage = await AsyncStorage.getItem('profileImage');
-        const storedUsername = await AsyncStorage.getItem('username');
-        const storedFirstName = await AsyncStorage.getItem('firstName');
-        if (storedProfileImage) setProfileImage({ uri: storedProfileImage });
-        if (storedUsername) setUsername(storedUsername);
-        else if (storedFirstName) setUsername(storedFirstName);
-      } catch (error) {
-        console.error('Failed to load profile data', error);
+    const loadUserData = async () => {
+      const storedImage = await AsyncStorage.getItem('profileImage');
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData) {
+        const { firstName, username: userEmail } = JSON.parse(userData);
+        setUser({
+          fullName: firstName,
+          email: userEmail,
+          profileImage: storedImage || 'https://randomuser.me/api/portraits/men/86.jpg',
+        });
       }
     };
-
-    loadProfileData();
+    loadUserData();
   }, []);
+
+
 
   const customTheme = {
     ...calendarTheme,
@@ -58,20 +65,50 @@ export default function Task() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={styles.taskView}>
-        <View style={styles.profileView}>
-          <View>
-            <Image source={profileImage || UserProfile} style={styles.userProfile} />
+      <LinearGradient
+        style={{
+          height: 260,
+          borderRadius: 20,
+          marginTop: -20,
+          paddingTop: 60,
+          paddingHorizontal: 10,
+        }}
+        start={[0, 1]}
+        end={[1, 0]}
+        colors={['#232526', '#414345']}
+      >
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity>
+            <Image
+              style={{ width: 50, height: 50, borderRadius: 100 }}
+              source={{ uri: user.profileImage }}
+            />
+          </TouchableOpacity>
+          <View
+            style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 10 }}
+          >
+            <Text
+              style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
+            >
+              {user.fullName}
+            </Text>
+            <Text
+              style={{ fontFamily: 'NSRegular', fontSize: 14, color: '#fff' }}
+            >
+              {user.email}
+            </Text>
           </View>
-          <View style={styles.details}>
-            <Text style={styles.mesText}>Task List</Text>
-            <Text style={styles.taskText}>Upcoming Task</Text>
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              router.push('/(tabs)/home')
+            }}>
+            <FeatherIcon
+              color="#000"
+              name="arrow-left"
+              size={24} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity>
-          <Image source={notificationImg} style={styles.notiImg} />
-        </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       <View style={styles.calenderView}>
         <View style={styles.mainCalenderView}>

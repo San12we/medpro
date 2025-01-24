@@ -4,11 +4,11 @@ import { Colors, Fonts } from "../../../theme";
 export const styles = StyleSheet.create({
   safeAreaContainer: {
     flex: 1,
-    backgroundColor: '#fcffc1',
+    backgroundColor: '#ecf2f9',
   },
   homeContainer: {
     flex: 1,
-   backgroundColor: '#fcffc1',
+   backgroundColor: '#ecf2f9',
   },
   homeView: {
     paddingHorizontal: 20,

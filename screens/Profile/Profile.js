@@ -113,12 +113,12 @@ export default function Example() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fcffc1' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ecf2f9', }}>
       <View style={styles.header}>
         <View style={styles.headerAction}>
           <TouchableOpacity
             onPress={() => {
-              // handle onPress
+              router.push('/(tabs)/home')
             }}>
             <FeatherIcon
               color="#000"
@@ -217,7 +217,9 @@ export default function Example() {
           <Text style={styles.sectionTitle}>Payment Method</Text>
           <View style={[styles.sectionBody, styles.paymentMethodSection]}>
             <TouchableOpacity
-              onPress={() => router.push('/payment')}
+             onPress={()=>{
+                
+              }}
               style={styles.row}>
               <Text style={styles.rowLabel}>Manage Payment Method</Text>
               <View style={styles.rowSpacer} />
@@ -233,7 +235,9 @@ export default function Example() {
           <Text style={styles.sectionTitle}>Insurance Provider</Text>
           <View style={styles.insuranceProviderSection}>
             <TouchableOpacity
-              onPress={() => router.push('/insurance')}
+              onPress={()=>{
+
+              }}
               style={styles.row}>
               <Text style={styles.rowLabel}>Manage Insurance Provider</Text>
               <View style={styles.rowSpacer} />

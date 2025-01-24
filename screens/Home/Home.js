@@ -5,6 +5,7 @@ import { notificationImg, UserProfile, AddTaskImg } from '../../theme/Images';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TaskContext } from '../../context/TaskContext';
+import {LinearGradient} from 'expo-linear-gradient'
 
 const TaskItem = ({ taskName, taskDetails, taskStatus }) => (
   <View style={styles.taskContainer}>
@@ -50,24 +51,23 @@ export default function Home() {
   const { items, calculateProgress } = useContext(TaskContext);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [activeTab, setActiveTab] = useState('All');
-  const [profileImage, setProfileImage] = useState(null);
-  const [username, setUsername] = useState('');
+  const [user, setUser] = useState({ fullName: '', email: '', profileImage: '' });
 
   useEffect(() => {
-    const loadProfileData = async () => {
-      try {
-        const storedProfileImage = await AsyncStorage.getItem('profileImage');
-        const storedUsername = await AsyncStorage.getItem('username');
-        const storedFirstName = await AsyncStorage.getItem('firstName');
-        if (storedProfileImage) setProfileImage({ uri: storedProfileImage });
-        if (storedUsername) setUsername(storedUsername);
-        else if (storedFirstName) setUsername(storedFirstName);
-      } catch (error) {
-        console.error('Failed to load profile data', error);
+    const loadUserData = async () => {
+      const storedImage = await AsyncStorage.getItem('profileImage');
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData) {
+        const { firstName, username: userEmail } = JSON.parse(userData);
+        setUser({
+          fullName: firstName,
+          email: userEmail,
+          profileImage: storedImage || 'https://randomuser.me/api/portraits/men/86.jpg',
+        });
       }
     };
 
-    loadProfileData();
+    loadUserData();
   }, []);
 
   useEffect(() => {
@@ -118,16 +118,42 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.safeAreaContainer}>
       <View style={styles.homeContainer}>
-        <View style={styles.homeView}>
-          <View style={styles.profileView}>
-            <View>
-              <Image source={profileImage || UserProfile} style={styles.userProfileImg} />
-            </View>
-          </View>
+      <LinearGradient
+        style={{
+          height: 260,
+          borderRadius: 20,
+          marginTop: -20,
+          paddingTop: 60,
+          paddingHorizontal: 10,
+        }}
+        start={[0, 1]}
+        end={[1, 0]}
+        colors={['#232526', '#414345']}
+      >
+        <View style={{ flexDirection: 'row' }}>
           <TouchableOpacity>
-            <Image source={notificationImg} style={styles.notiImg} />
+            <Image
+              style={{ width: 50, height: 50, borderRadius: 100 }}
+              source={{ uri: user.profileImage }}
+            />
           </TouchableOpacity>
+          <View
+            style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 10 }}
+          >
+            <Text
+              style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
+            >
+              {user.fullName}
+            </Text>
+            <Text
+              style={{ fontFamily: 'NSRegular', fontSize: 14, color: '#fff' }}
+            >
+              {user.email}
+            </Text>
+          </View>
+         
         </View>
+      </LinearGradient>
 
         <View style={styles.taskSummaryView}>
           <View style={styles.taskSummaryCard}>
