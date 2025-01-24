@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { TaskProvider } from '../context/TaskContext'; // Import TaskProvider
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -28,12 +29,33 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <TaskProvider> {/* Wrap with TaskProvider */}
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="initial" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(tabs)/task" /> {/* Add task screen */}
+          <Stack.Screen name="auth/login" />
+          <Stack.Screen name="addtask" />
+          <Stack.Screen name="auth/register" />
+          <Stack.Screen name="payment" />
+          <Stack.Screen name="insurance" />
+          <Stack.Screen name="clinic" />
+          <Stack.Screen name="professional" />
+          <Stack.Screen name="personal" />
+          <Stack.Screen 
+        name="onboarding/index" 
+        options={{ 
+          title: "Welcome", 
+          headerShown: false,
+          headerStyle: { backgroundColor: '#f4511e' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' }
+        }} 
+      />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </TaskProvider>
   );
 }

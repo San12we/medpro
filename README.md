@@ -1,50 +1,253 @@
-# Welcome to your Expo app 👋
+import React, { useState, useContext, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, Picker, FlatList, Alert } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { TaskContext } from '../../context/TaskContext'; // Import TaskContext
+import { styles } from './Style/AddTaskStyle';
+import { backArrowImg, calenderImg } from '../../theme/Images';
+import { Colors } from "../../theme/Colors";
+import { Snackbar } from 'react-native-paper'; // Import Snackbar
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+export default function AddTask() {
+  const router = useRouter();
+  const { params } = router;
+  const initialDate = params && params.selectedDate ? new Date(params.selectedDate) : new Date();
+  const { addTask } = useContext(TaskContext); // Access addTask from TaskContext
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [inputFocus, setInputFocus] = useState('');
+  const [assignTo, setAssignTo] = useState('');
+  const [recurrence, setRecurrence] = useState('none');
+  const [currentShift, setCurrentShift] = useState({ shiftName: '', startTime: initialDate, endTime: initialDate, durationOfConsultation: 30, breaks: [] });
+  const [shifts, setShifts] = useState([]);
+  const [userId, setUserId] = useState('');
+  const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility state
+  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message state
 
-## Get started
+  useEffect(() => {
+    const loadUserId = async () => {
+      try {
+        const storedUserData = await AsyncStorage.getItem('userData');
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          setUserId(userData.userId);
+          console.log('Retrieved user data:', userData); // Log the user data
+        }
+      } catch (error) {
+        console.error('Failed to load user data', error);
+      }
+    };
 
-1. Install dependencies
+    loadUserId();
+  }, []);
 
-   ```bash
-   npm install
-   ```
+  const goback = () => {
+    router.push('/(tabs)/home');
+  };
 
-2. Start the app
+  const showDatepicker = (input) => {
+    setInputFocus(input);
+    setShowDatePicker(true);
+  };
 
-   ```bash
-    npx expo start
-   ```
+  const onChange = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setCurrentShift((prevShift) => ({
+        ...prevShift,
+        [inputFocus]: selectedDate,
+      }));
+    }
+  };
 
-In the output, you'll find options to open the app in a
+  const handleAddShift = () => {
+    if (!currentShift.shiftName) {
+      setSnackbarMessage('Please fill in the shift name.');
+      setSnackbarVisible(true);
+      return;
+    }
+    setShifts([...shifts, currentShift]);
+    setCurrentShift({ shiftName: '', startTime: initialDate, endTime: initialDate, durationOfConsultation: 30, breaks: [] });
+  };
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+  const handleCreateSchedule = () => {
+    if (!assignTo || shifts.length === 0) {
+      setSnackbarMessage('Please fill in all required fields.');
+      setSnackbarVisible(true);
+      return;
+    }
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+    const newEntry = {
+      shifts,
+      assignTo,
+      recurrence,
+      type: 'Schedule', // Always mark as Schedule
+    };
 
-## Get a fresh project
+    addTask(newEntry); // Add schedule globally
+    router.push('/(tabs)/task');
+  };
 
-When you're ready, run:
+  const handleSaveSchedule = async () => {
+    if (shifts.length === 0) {
+      setSnackbarMessage('Please add some shifts before saving!');
+      setSnackbarVisible(true);
+      return;
+    }
 
-```bash
-npm run reset-project
-```
+    const formattedShifts = shifts.map((shift) => ({
+      name: shift.shiftName,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+      date: shift.startTime.toISOString().split('T')[0],
+      durationOfConsultation: shift.durationOfConsultation, // Include durationOfConsultation
+      slots: shift.slots || [],
+    }));
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+    const payload = {
+      professionalId: userId, // Use userId as professionalId
+      availability: formattedShifts.reduce((acc, shift) => {
+        const dayKey = shift.date;
+        if (!acc[dayKey]) {
+          acc[dayKey] = [];
+        }
+        acc[dayKey].push({
+          shiftName: shift.name,
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          durationOfConsultation: shift.durationOfConsultation, // Include durationOfConsultation
+          slots: shift.slots,
+        });
+        return acc;
+      }, {}),
+      recurrence,
+    };
 
-## Learn more
+    try {
+      await axios.put("https://medplus-health.onrender.com/api/schedule", payload);
+      setSnackbarMessage('Your schedule has been saved successfully!');
+      setSnackbarVisible(true);
+      setShifts([]); // Clear shifts after saving
+      setCurrentShift({ shiftName: '', startTime: initialDate, endTime: initialDate, durationOfConsultation: 30, breaks: [] });
+      setAssignTo('');
+      setRecurrence('none');
+    } catch (error) {
+      setSnackbarMessage('Error saving schedule.');
+      setSnackbarVisible(true);
+    }
+  };
 
-To learn more about developing your project with Expo, look at the following resources:
+  const renderShiftItem = ({ item, index }) => (
+    <View style={[styles.previewCard, { backgroundColor: index % 2 === 0 ? '#f0f0f0' : '#e0e0e0' }]}>
+      <Text style={styles.previewCardTitle}>{item.shiftName}</Text>
+      <Text style={styles.previewCardText}>{item.startTime.toLocaleTimeString()} - {item.endTime.toLocaleTimeString()}</Text>
+      <Text style={styles.previewCardText}>Duration: {item.durationOfConsultation} minutes</Text>
+    </View>
+  );
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+  return (
+    <ScrollView style={styles.addTaskContainer}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={goback}>
+          <Image source={backArrowImg} style={styles.backArrow} />
+        </TouchableOpacity>
+        <Text style={styles.textAdd}>Add Schedule for {initialDate.toDateString()}</Text>
+      </View>
+      <View style={styles.inputContainer}>
+        
+        <View style={styles.inputView}>
+          <Text style={styles.label}>Recurrence</Text>
+          <Picker selectedValue={recurrence} style={styles.picker} onValueChange={(itemValue) => setRecurrence(itemValue)}>
+            <Picker.Item label="None" value="none" />
+            <Picker.Item label="Daily" value="daily" />
+            <Picker.Item label="Weekly" value="weekly" />
+           
+          </Picker>
+        </View>
+        <View style={styles.shiftContainer}>
+          <View style={styles.inputView}>
+            <Text style={styles.label}>Shift Name</Text>
+            <TextInput
+              placeholder="Shift Name"
+              style={styles.Input}
+              value={currentShift.shiftName}
+              onChangeText={(text) => setCurrentShift({ ...currentShift, shiftName: text })}
+            />
+          </View>
+          <View style={styles.inputView}>
+            <Text style={styles.label}>Start Time</Text>
+            <View style={styles.dateView}>
+              <TextInput
+                placeholder="Start Time"
+                style={styles.InputDate}
+                onFocus={() => showDatepicker('startTime')}
+                value={currentShift.startTime.toLocaleTimeString()}
+              />
+              <TouchableOpacity onPress={() => showDatepicker('startTime')}>
+                <Image source={calenderImg} style={styles.calenderImgs} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.inputView}>
+            <Text style={styles.label}>End Time</Text>
+            <View style={styles.dateView}>
+              <TextInput
+                placeholder="End Time"
+                style={styles.InputDate}
+                onFocus={() => showDatepicker('endTime')}
+                value={currentShift.endTime.toLocaleTimeString()}
+              />
+              <TouchableOpacity onPress={() => showDatepicker('endTime')}>
+                <Image source={calenderImg} style={styles.calenderImgs} />
+              </TouchableOpacity>
+            </View>
+            {showDatePicker && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={inputFocus === 'startTime' ? currentShift.startTime : currentShift.endTime}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={onChange}
+              />
+            )}
+          </View>
+          <View style={styles.inputView}>
+            <Text style={styles.label}>Duration of Consultation (minutes)</Text>
+            <TextInput
+              placeholder="Duration"
+              style={styles.Input}
+              keyboardType="numeric"
+              value={currentShift.durationOfConsultation.toString()}
+              onChangeText={(text) => setCurrentShift({ ...currentShift, durationOfConsultation: parseInt(text, 10) })}
+            />
+          </View>
+          <TouchableOpacity onPress={handleAddShift} style={styles.addShiftButton}>
+            <Text style={styles.addShiftButtonText}>Add Shift</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.previewContainer}>
+          <Text style={styles.previewTitle}>Schedule Preview</Text>
+          <FlatList
+            data={shifts}
+            renderItem={renderShiftItem}
+            keyExtractor={(item, index) => index.toString()}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
+        <TouchableOpacity style={styles.btn} onPress={handleSaveSchedule}>
+          <Text style={styles.btnText}>Save</Text>
+        </TouchableOpacity>
+      </View>
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+      >
+        {snackbarMessage}
+      </Snackbar>
+    </ScrollView>
+  );
+}
