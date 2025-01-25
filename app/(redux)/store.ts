@@ -12,6 +12,7 @@ import { useDispatch } from 'react-redux';
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
+  whitelist: ['user'], // Persist only the user state
 };
 
 const rootReducer = combineReducers({

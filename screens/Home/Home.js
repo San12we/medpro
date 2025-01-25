@@ -5,7 +5,8 @@ import { notificationImg, UserProfile, AddTaskImg } from '../../theme/Images';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TaskContext } from '../../context/TaskContext';
-import {LinearGradient} from 'expo-linear-gradient'
+import { useSelector } from 'react-redux'; // Import useSelector from react-redux
+import { LinearGradient } from 'expo-linear-gradient';
 
 const TaskItem = ({ taskName, taskDetails, taskStatus }) => (
   <View style={styles.taskContainer}>
@@ -51,41 +52,7 @@ export default function Home() {
   const { items, calculateProgress } = useContext(TaskContext);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [activeTab, setActiveTab] = useState('All');
-  const [user, setUser] = useState({ fullName: '', email: '', profileImage: '' });
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      const storedImage = await AsyncStorage.getItem('profileImage');
-      const userData = await AsyncStorage.getItem('userData');
-      if (userData) {
-        const { firstName, username: userEmail } = JSON.parse(userData);
-        setUser({
-          fullName: firstName,
-          email: userEmail,
-          profileImage: storedImage || 'https://randomuser.me/api/portraits/men/86.jpg',
-        });
-      }
-    };
-
-    loadUserData();
-  }, []);
-
-  useEffect(() => {
-    const retrieveData = async () => {
-      try {
-        const profileImage = await AsyncStorage.getItem('profileImage');
-        const username = await AsyncStorage.getItem('username');
-        const firstName = await AsyncStorage.getItem('firstName');
-        console.log('Profile Image:', profileImage);
-        console.log('Username:', username);
-        console.log('First Name:', firstName);
-      } catch (error) {
-        console.error('Failed to retrieve data from AsyncStorage', error);
-      }
-    };
-
-    retrieveData();
-  }, []);
+  const user = useSelector((state) => state.auth?.user); // Access user from state with optional chaining
 
   useEffect(() => {
     filterTasks(activeTab);
@@ -118,42 +85,37 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.safeAreaContainer}>
       <View style={styles.homeContainer}>
-      <LinearGradient
-        style={{
-          height: 260,
-          borderRadius: 20,
-          marginTop: -20,
-          paddingTop: 60,
-          paddingHorizontal: 10,
-        }}
-        start={[0, 1]}
-        end={[1, 0]}
-        colors={['#232526', '#414345']}
-      >
-        <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity>
-            <Image
-              style={{ width: 50, height: 50, borderRadius: 100 }}
-              source={{ uri: user.profileImage }}
-            />
-          </TouchableOpacity>
-          <View
-            style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 10 }}
-          >
-            <Text
-              style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
+        <LinearGradient
+          style={{
+            height: 260,
+            borderRadius: 20,
+            marginTop: -20,
+            paddingTop: 60,
+            paddingHorizontal: 10,
+          }}
+          start={[0, 1]}
+          end={[1, 0]}
+          colors={['#232526', '#414345']}
+        >
+          <View style={{ flexDirection: 'row' }}>
+            <TouchableOpacity>
+              <Image
+                style={{ width: 50, height: 50, borderRadius: 100 }}
+                source={{ uri: user?.profileImage || 'https://randomuser.me/api/portraits/men/86.jpg' }}
+              />
+            </TouchableOpacity>
+            <View
+              style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 10 }}
             >
-              {user.fullName}
-            </Text>
-            <Text
-              style={{ fontFamily: 'NSRegular', fontSize: 14, color: '#fff' }}
-            >
-              {user.email}
-            </Text>
+              <Text
+                style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
+              >
+               Dr. {user?.firstName}
+              </Text>
+             
+            </View>
           </View>
-         
-        </View>
-      </LinearGradient>
+        </LinearGradient>
 
         <View style={styles.taskSummaryView}>
           <View style={styles.taskSummaryCard}>

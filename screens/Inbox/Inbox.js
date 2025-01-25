@@ -170,13 +170,9 @@ export default function Inbox() {
             <Text
               style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
             >
-              {userState.fullName}
+            Dr.  {userState.firstName}
             </Text>
-            <Text
-              style={{ fontFamily: 'NSRegular', fontSize: 14, color: '#fff' }}
-            >
-              {userState.email}
-            </Text>
+           
           </View>
           <TouchableOpacity style={{ justifyContent: 'center' }}>
             <Icon name='bell' color='#fff' size='26' />

@@ -80,13 +80,7 @@ const Transaction: React.FC = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f8f8f8' }}>
-      <View style={styles.header}>
-        <View style={styles.headerAction}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons color="#000" name="arrow-back" size={24} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      
 
       <ScrollView style={styles.container}>
        

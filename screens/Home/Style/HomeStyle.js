@@ -4,7 +4,7 @@ import { Colors, Fonts } from "../../../theme";
 export const styles = StyleSheet.create({
   safeAreaContainer: {
     flex: 1,
-    backgroundColor: '#ecf2f9',
+    backgroundColor: '#f8e9b0',
   },
   homeContainer: {
     flex: 1,
@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#a3de83',
+    backgroundColor: '#f8e9b0',
     paddingTop: 20,
     paddingBottom: 40,
     alignItems: 'center',

@@ -343,13 +343,9 @@ const AddTask = () => {
             <Text
               style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
             >
-              {user.fullName}
+             Dr. {user.firstName}
             </Text>
-            <Text
-              style={{ fontFamily: 'NSRegular', fontSize: 14, color: '#fff' }}
-            >
-              {user.email}
-            </Text>
+           
           </View>
           <TouchableOpacity
             onPress={() => {
@@ -373,7 +369,9 @@ const AddTask = () => {
           />
         ))}
         {renderPreview()}
-        <Button title="Submit" onPress={handleSubmit} color="black" />
+        {!Object.keys(schedules).some((day) => schedules[day]?.length) && (
+          <Button title="Submit" onPress={handleSubmit} color="black" />
+        )}
       </ScrollView>
     </View>
   );

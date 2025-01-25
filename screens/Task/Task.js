@@ -8,35 +8,15 @@ import { Feather as Icon } from '@expo/vector-icons';
 import { notificationImg, UserProfile, AddImg } from '../../theme/Images';
 import { Agenda, calendarTheme } from 'react-native-calendars';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {LinearGradient} from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import { TaskContext } from '../../context/TaskContext';
-
+import { useSelector } from 'react-redux'; // Import useSelector from react-redux
 
 export default function Task() {
   const router = useRouter();
   const { items } = useContext(TaskContext);
-  const [profileImage, setProfileImage] = useState(null);
-  const [username, setUsername] = useState('');
+  const user = useSelector((state) => state.auth?.user); // Access user from state with optional chaining
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [user, setUser] = useState({ fullName: '', email: '', profileImage: '' });
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      const storedImage = await AsyncStorage.getItem('profileImage');
-      const userData = await AsyncStorage.getItem('userData');
-      if (userData) {
-        const { firstName, username: userEmail } = JSON.parse(userData);
-        setUser({
-          fullName: firstName,
-          email: userEmail,
-          profileImage: storedImage || 'https://randomuser.me/api/portraits/men/86.jpg',
-        });
-      }
-    };
-    loadUserData();
-  }, []);
-
-
 
   const customTheme = {
     ...calendarTheme,
@@ -81,7 +61,7 @@ export default function Task() {
           <TouchableOpacity>
             <Image
               style={{ width: 50, height: 50, borderRadius: 100 }}
-              source={{ uri: user.profileImage }}
+              source={{ uri: user?.profileImage || 'https://randomuser.me/api/portraits/men/86.jpg' }}
             />
           </TouchableOpacity>
           <View
@@ -90,13 +70,9 @@ export default function Task() {
             <Text
               style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
             >
-              {user.fullName}
+             Dr. {user?.firstName}
             </Text>
-            <Text
-              style={{ fontFamily: 'NSRegular', fontSize: 14, color: '#fff' }}
-            >
-              {user.email}
-            </Text>
+            
           </View>
           <TouchableOpacity
             onPress={() => {

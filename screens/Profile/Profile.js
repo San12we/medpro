@@ -16,6 +16,8 @@ import FeatherIcon from '@expo/vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pickImage, uploadImage } from '../../utils/imageUtils';
 import { useRouter } from 'expo-router';
+import { useDispatch } from 'react-redux';
+import { clearUser } from '../../app/(redux)/userSlice'; // Import clearUser action
 
 export default function Example() {
   const [form, setForm] = useState({
@@ -34,6 +36,7 @@ export default function Example() {
   const [currentValue, setCurrentValue] = useState('');
   const [experience, setExperience] = useState(0);
   const router = useRouter();
+  const dispatch = useDispatch(); // Initialize dispatch
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -110,6 +113,12 @@ export default function Example() {
       setExperience(experience - 1);
       saveProfileData('experience', experience - 1);
     }
+  };
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('userData');
+    dispatch(clearUser());
+    router.replace('/auth/login');
   };
 
   return (
@@ -292,9 +301,7 @@ export default function Example() {
                 { alignItems: 'center' },
               ]}>
               <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
+                onPress={handleLogout} // Call handleLogout on press
                 style={styles.row}>
                 <Text style={[styles.rowLabel, styles.rowLabelLogout]}>
                   Log Out
