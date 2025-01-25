@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Alert } from "react-native";
+import { TouchableOpacity, StyleSheet, View, Alert } from "react-native";
 
 import { useRouter } from "expo-router";
 import Background from "../../components/Background";
-
+import Logo from "../../components/Logo";
 import Header from "../../components/Header";
 import Button from "../../components/Button";
 import TextInput from "../../components/TextInput";
@@ -26,7 +26,7 @@ export default function ResetPasswordScreen() {
     try {
       await requestPasswordReset(email.value);
       Alert.alert("Success", "Password reset email sent!");
-      setStep(2); 
+      setStep(2); // Move to the next step
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.error) {
         Alert.alert("Request failed", error.response.data.error);
@@ -52,7 +52,7 @@ export default function ResetPasswordScreen() {
 
   return (
     <Background>
-      
+      <Logo />
       <Header>Reset Password</Header>
       {step === 1 ? (
         <>
@@ -67,9 +67,9 @@ export default function ResetPasswordScreen() {
             autoCompleteType="email"
             textContentType="emailAddress"
             keyboardType="email-address"
-            description=""
+            description="You will receive an email with a verification code."
           />
-          <Button mode="contained" onPress={onRequestPasswordResetPressed} style={{ marginTop: 16 }}>
+          <Button mode="contained" onPress={onRequestPasswordResetPressed}>
             Request Password Reset
           </Button>
         </>
@@ -82,7 +82,7 @@ export default function ResetPasswordScreen() {
             onChangeText={(text) => setVerificationCode({ value: text, error: "" })}
             error={!!verificationCode.error}
             errorText={verificationCode.error}
-            description=""
+            description="Check your email for the verification code."
           />
           <TextInput
             label="New Password"
@@ -92,9 +92,9 @@ export default function ResetPasswordScreen() {
             error={!!newPassword.error}
             errorText={newPassword.error}
             secureTextEntry
-            description=""
+            description="Enter your new password."
           />
-          <Button mode="contained" onPress={onResetPasswordPressed} style={{ marginTop: 16 }}>
+          <Button mode="contained" onPress={onResetPasswordPressed} style={{}}>
             Reset Password
           </Button>
         </>
@@ -104,18 +104,6 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  forgotPassword: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 24,
-  },
-  row: {
-    flexDirection: "row",
-    marginTop: 4,
-  },
-  link: {
-    fontWeight: "bold",
-    color: "blue",
-  },
+  // ...existing styles...
   
 });

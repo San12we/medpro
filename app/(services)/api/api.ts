@@ -1,5 +1,4 @@
 import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = "https://project03-rj91.onrender.com";
 
@@ -87,13 +86,8 @@ const verifyEmail = async ({ email, verificationCode }: { email: string; verific
   return response.data;
 };
 
-// logout
-const logoutUser = async (): Promise<void> => {
-  await AsyncStorage.removeItem('userData');
-};
-
 // export the functions
-export { loginUser, registerUser, googleLoginUser, setPassword, resetPassword, requestPasswordReset, verifyEmail, logoutUser };
+export { loginUser, registerUser, googleLoginUser, setPassword, resetPassword, requestPasswordReset, verifyEmail };
 
 export default {
   loginUser,
@@ -103,5 +97,4 @@ export default {
   resetPassword,
   requestPasswordReset,
   verifyEmail,
-  logoutUser,
 };

@@ -1,24 +1,15 @@
 import React, { useEffect, useState } from 'react';
-
 import { StyleSheet, Text, View, Alert, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Picker} from '@react-native-picker/picker';
-import axios from 'axios';
+import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../components/Shared/Colors';
 import { useNavigation } from '@react-navigation/native';
+import InfoCard from '../../components/InfoCard';
+import TransactionCard from '../../components/TransactionCard';
+import { fetchBanks, fetchSubaccountInfo, fetchTransactions } from '../../utils/api';
+import axios from 'axios';
 
-const InfoCard = ({ label, value, isVisible }: { label: string; value: string; isVisible: boolean }) => (
-  <Text style={styles.infoText}>{label}: {isVisible ? value : '******'}</Text>
-);
-
-const TransactionCard = ({ description, amount, date }: { description: string; amount: number; date: string }) => (
-  <View style={styles.transactionCard}>
-    <Text style={styles.transactionText}>{description}</Text>
-    <Text style={styles.transactionText}>Amount: {amount}</Text>
-    <Text style={styles.transactionDate}>Date: {new Date(date).toLocaleDateString()}</Text>
-  </View>
-);
 
 const Transaction: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
@@ -34,51 +25,27 @@ const Transaction: React.FC = () => {
   const [viewMode, setViewMode] = useState<'default' | 'payment'>('default');
   const [loading, setLoading] = useState(true);
 
-  const PAYSTACK_SECRET_KEY = process.env.EXPO_PUBLIC_PAYSTACK_SECRET_KEY;
   const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
       const storedUserId = await AsyncStorage.getItem('userId');
       setUserId(storedUserId);
-      await Promise.all([fetchBanks(), fetchSubaccountInfo(storedUserId), fetchTransactions()]);
+      try {
+        const [banksData, subaccountInfo, transactionsData] = await Promise.all([
+          fetchBanks(),
+          fetchSubaccountInfo(storedUserId),
+          fetchTransactions(),
+        ]);
+        setBanks(banksData);
+        setSubaccountData(subaccountInfo || subaccountData);
+        setTransactions(transactionsData);
+      } catch (error) {
+        showAlert(error.message);
+      }
       setLoading(false);
     })();
   }, []);
-
-  const fetchBanks = async () => {
-    try {
-      const response = await axios.get('https://api.paystack.co/bank?country=kenya', {
-        headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
-      });
-      setBanks(response.data.data || []);
-    } catch (error) {
-      showAlert('Failed to fetch banks.');
-    }
-  };
-
-  const fetchSubaccountInfo = async (userId: string | null) => {
-    if (!userId) return;
-    try {
-      const response = await axios.get(`https://medplus-health.onrender.com/api/subaccount/${userId}`);
-      setSubaccountData(response.data);
-    } catch {
-      showAlert('Failed to fetch account info.');
-    }
-  };
-
-  const fetchTransactions = async () => {
-    try {
-      const reference = await AsyncStorage.getItem('transactionReference');
-      if (!reference) throw new Error('Transaction reference not found.');
-      const response = await axios.get(`https://api.paystack.co/transaction/${reference}`, {
-        headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
-      });
-      setTransactions(response.data || []);
-    } catch (error) {
-      // No need to log or alert, the "No transactions found" message is enough
-    }
-  };
 
   const showAlert = (message: string) => Alert.alert('Error', message);
 
@@ -115,22 +82,14 @@ const Transaction: React.FC = () => {
     <View style={{ flex: 1, backgroundColor: '#f8f8f8' }}>
       <View style={styles.header}>
         <View style={styles.headerAction}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}>
-            <Ionicons
-              color="#000"
-              name="arrow-back"
-              size={24} />
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons color="#000" name="arrow-back" size={24} />
           </TouchableOpacity>
         </View>
-
-        
-
-       
       </View>
 
       <ScrollView style={styles.container}>
-        {/* Account Information Section */}
+       
         {viewMode === 'default' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Account Information</Text>
@@ -147,14 +106,14 @@ const Transaction: React.FC = () => {
           </View>
         )}
 
-        {/* Update Payment Info Button */}
+       
         {!subaccountData.business_name && viewMode === 'default' && (
           <TouchableOpacity style={styles.updateButton} onPress={() => setViewMode('payment')}>
             <Text style={styles.updateButtonText}>Update Payment Info</Text>
           </TouchableOpacity>
         )}
 
-        {/* Payment Form Section */}
+        
         {viewMode === 'payment' && (
           <View style={styles.paymentForm}>
             <Text style={styles.sectionTitle}>Update Payment</Text>

@@ -5,33 +5,40 @@ import { styles } from './Style/LoginStyle'
 import { LoginImg, UserImg, GoogleImg, AppleImg, FacebookImg, PasswordImg } from '../../theme/Images'
 import { loginUser } from '../../app/(services)/api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../../app/(redux)/userSlice'; // Import setUser action
+import { useMutation } from '@tanstack/react-query'; // Import useMutation
 
 export default function Login() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const dispatch = useDispatch(); // Initialize dispatch
 
-  const handleLogin = async () => {
-    try {
-      const data = await loginUser({ email: username, password });
-      const { professionalId, user } = data;
+  const mutation = useMutation(loginUser, {
+    onSuccess: async (data) => {
+      const { professionalId, user, token, profileImage } = data;
       const userData = {
-        userId: user._id,
+        id: user._id,
         professionalId,
-        profileImage: user.profileImage,
+        profileImage,
         firstName: user.firstName,
         username: user.username,
         email: user.email,
-        phoneNumber: user.phoneNumber,
-        userType: user.userType,
-        completedProfile: user.completedProfile,
+        token,
       };
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      dispatch(setUser(userData)); // Dispatch setUser action
       console.log('Login successful:', userData);
       router.push('/(tabs)/home');
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Login failed:', error);
-    }
+    },
+  });
+
+  const handleLogin = () => {
+    mutation.mutate({ email: username, password });
   };
 
   useEffect(() => {
@@ -82,8 +89,8 @@ export default function Login() {
         </View>
 
         <Text style={styles.forgetText}>Forget Password</Text>
-        <TouchableOpacity style={styles.btn} onPress={handleLogin}>
-          <Text style={styles.btnText}>Sign in</Text>
+        <TouchableOpacity style={styles.btn} onPress={handleLogin} disabled={mutation.isLoading}>
+          <Text style={styles.btnText}>{mutation.isLoading ? 'Signing in...' : 'Sign in'}</Text>
         </TouchableOpacity>
         <Text style={styles.contiueText}>or continue with</Text>
       </View>
