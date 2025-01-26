@@ -14,25 +14,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather as Icon } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { useFonts } from 'expo-font';
 import { useSelector } from 'react-redux';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchBanks, createSubaccount } from '../../utils/api'; // Import fetchBanks and createSubaccount
 
-import NSLight from '../../assets/fonts/NunitoSans_7pt-ExtraLight.ttf';
-import NSRegular from '../../assets/fonts/NunitoSans_7pt_Condensed-Regular.ttf';
-import NSBold from '../../assets/fonts/NunitoSans_7pt_Condensed-Bold.ttf';
-import NSExtraBold from '../../assets/fonts/NunitoSans_7pt_Condensed-ExtraBold.ttf';
+import { fetchBanks, createSubaccount } from '../../utils/api'; 
 
 export default function Inbox() {
-  const [loaded] = useFonts({
-    NSLight,
-    NSRegular,
-    NSBold,
-    NSExtraBold,
-  });
-
-  const user = useSelector((state) => state.auth?.user); // Access user from state with optional chaining
+  const user = useSelector((state) => state.auth?.user);
   const [subaccountData, setSubaccountData] = useState({
     business_name: '',
     settlement_bank: '',
@@ -44,7 +31,7 @@ export default function Inbox() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content'); // Set status bar style when component mounts
+    StatusBar.setBarStyle('light-content');
 
     const loadBanks = async () => {
       try {
@@ -80,7 +67,7 @@ export default function Inbox() {
     }
   };
 
-  if (!loaded || loading) {
+  if (loading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size='large' />
@@ -91,7 +78,6 @@ export default function Inbox() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Text>Inbox Component Loaded</Text> 
       <LinearGradient
         style={{
           height: 260,
@@ -115,7 +101,7 @@ export default function Inbox() {
             style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 10 }}
           >
             <Text
-              style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
+              style={{ fontWeight: 'bold', fontSize: 16, color: '#fff' }}
             >
             Dr. {user?.firstName}
             </Text>
@@ -143,10 +129,10 @@ export default function Inbox() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: 'NSRegular', fontSize: 16 }}>
+            <Text style={{ fontSize: 16 }}>
               Balance
             </Text>
-            <Text style={{ fontFamily: 'NSBold', fontSize: 30 }}>₹52,645</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 24 }}>KSH 52,645</Text>
           </View>
           <View style={{ flexDirection: 'row' }}>
             <TouchableOpacity
@@ -164,7 +150,7 @@ export default function Inbox() {
               <Text
                 style={{
                   color: '#fff',
-                  fontFamily: 'NSExtraBold',
+                  fontWeight: 'bold',
                   fontSize: 16,
                   marginLeft: 4,
                 }}
@@ -189,7 +175,7 @@ export default function Inbox() {
               <Text
                 style={{
                   color: '#fff',
-                  fontFamily: 'NSExtraBold',
+                  fontWeight: 'bold',
                   fontSize: 16,
                   marginLeft: 4,
                 }}
@@ -202,29 +188,29 @@ export default function Inbox() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <View style={{ alignItems: 'center', flex: 1 }}>
             <Icon name='trending-down' color='green' size='30' />
-            <Text style={{ fontFamily: 'NSBold', fontSize: 18 }}>Received</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Received</Text>
             <Text
-              style={{ fontSize: 16, marginTop: 4, fontFamily: 'NSRegular' }}
+              style={{ fontSize: 16, marginTop: 4 }}
             >
-              ₹0
+              KSH 0
             </Text>
           </View>
           <View style={{ alignItems: 'center', flex: 1 }}>
             <Icon name='trending-up' color='red' size='30' />
-            <Text style={{ fontFamily: 'NSBold', fontSize: 18 }}>Spent</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Spent</Text>
             <Text
-              style={{ fontSize: 16, marginTop: 4, fontFamily: 'NSRegular' }}
+              style={{ fontSize: 16, marginTop: 4 }}
             >
-              ₹0
+              KSH 0
             </Text>
           </View>
           <View style={{ alignItems: 'center', flex: 1 }}>
             <Icon name='pocket' color='#0984e3' size='30' />
-            <Text style={{ fontFamily: 'NSBold', fontSize: 18 }}>Saved</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Saved</Text>
             <Text
-              style={{ fontSize: 16, marginTop: 4, fontFamily: 'NSRegular' }}
+              style={{ fontSize: 16, marginTop: 4 }}
             >
-              ₹0
+              KSH 0
             </Text>
           </View>
         </View>
@@ -237,7 +223,7 @@ export default function Inbox() {
             justifyContent: 'space-between',
           }}
         >
-          <Text style={{ fontFamily: 'NSExtraBold', fontSize: 20 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 20 }}>
             Recent Transactions
           </Text>
           <TouchableOpacity>
@@ -264,7 +250,7 @@ export default function Inbox() {
               paddingHorizontal: 10,
             }}
           >
-            <Text style={{ fontFamily: 'NSRegular', fontSize: 16 }}>
+            <Text style={{ fontSize: 16 }}>
               Sample Transaction
             </Text>
           </View>
@@ -274,13 +260,13 @@ export default function Inbox() {
               paddingHorizontal: 10,
             }}
           >
-            <Text style={{ fontFamily: 'NSBold', color: 'green' }}>
-              + ₹0
+            <Text style={{ fontWeight: 'bold', color: 'green' }}>
+              + KSH 0
             </Text>
           </View>
         </View>
         <View style={{ marginTop: 20, paddingHorizontal: 10 }}>
-          <Text style={{ fontFamily: 'NSExtraBold', fontSize: 20 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 20 }}>
             Payment Method
           </Text>
           {viewMode === 'default' && (

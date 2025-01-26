@@ -6,7 +6,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Switch,
   Image,
   Alert,
   TextInput,
@@ -16,9 +15,9 @@ import FeatherIcon from '@expo/vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pickImage, uploadImage } from '../../utils/imageUtils';
 import { useRouter } from 'expo-router';
-import { useDispatch, useSelector } from 'react-redux'; // Import useSelector
-import { clearUser } from '../../app/(redux)/userSlice'; // Import clearUser action
-import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
+import { useDispatch, useSelector } from 'react-redux';
+import { clearUser } from '../../app/(redux)/userSlice';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Example() {
   const [form, setForm] = useState({
@@ -36,8 +35,8 @@ export default function Example() {
   const [email, setEmail] = useState('');
   const [profileImage, setProfileImage] = useState('');
   const router = useRouter();
-  const dispatch = useDispatch(); // Initialize dispatch
-  const user = useSelector((state) => state.auth?.user); // Access user from state with optional chaining
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth?.user);
 
   useEffect(() => {
     if (user) {
@@ -195,7 +194,7 @@ export default function Example() {
           <View style={[styles.sectionBody, styles.paymentMethodSection]}>
             <TouchableOpacity
              onPress={()=>{
-                
+
               }}
               style={styles.row}>
               <Text style={styles.rowLabel}>Manage Payment Method</Text>
@@ -269,7 +268,7 @@ export default function Example() {
                 { alignItems: 'center' },
               ]}>
               <TouchableOpacity
-                onPress={handleLogout} // Call handleLogout on press
+                onPress={handleLogout}
                 style={styles.row}>
                 <Text style={[styles.rowLabel, styles.rowLabelLogout]}>
                   Log Out
@@ -286,7 +285,6 @@ export default function Example() {
 }
 
 const styles = StyleSheet.create({
-  /** Header */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -309,7 +307,6 @@ const styles = StyleSheet.create({
     flexBasis: 0,
     textAlign: 'center',
   },
-  /** Content */
   content: {
     paddingHorizontal: 16,
   },
@@ -320,7 +317,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#a69f9f',
   },
-  /** Section */
   section: {
     paddingVertical: 12,
   },
@@ -344,7 +340,6 @@ const styles = StyleSheet.create({
     shadowRadius: 1.41,
     elevation: 2,
   },
-  /** Profile */
   profile: {
     padding: 12,
     backgroundColor: '#fff',
@@ -373,7 +368,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#858585',
   },
-  /** Row */
   row: {
     height: 44,
     width: '100%',
@@ -443,10 +437,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   paymentMethodSection: {
-    backgroundColor: '#e0f7fa', // Different background color
+    backgroundColor: '#e0f7fa',
   },
   insuranceProviderSection: {
-    backgroundColor: '#e0f7fa', // Different background color
+    backgroundColor: '#e0f7fa',
   },
   modalContainer: {
     flex: 1,

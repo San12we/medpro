@@ -4,7 +4,7 @@ import { firebase } from '../firebase/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 
-export const pickImage = async (setProfileImage) => {
+export const pickImage = async () => {
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -13,14 +13,15 @@ export const pickImage = async (setProfileImage) => {
   });
 
   if (!result.cancelled) {
-    setProfileImage(result.assets[0].uri);
+    return result.uri;
+  } else {
+    return null;
   }
 };
 
-export const uploadImage = async (profileImage, setUploading) => {
-  setUploading(true);
+export const uploadImage = async (imageUri) => {
   try {
-    const { uri } = await FileSystem.getInfoAsync(profileImage);
+    const { uri } = await FileSystem.getInfoAsync(imageUri);
     const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.onload = () => resolve(xhr.response);
@@ -30,7 +31,7 @@ export const uploadImage = async (profileImage, setUploading) => {
       xhr.send(null);
     });
 
-    const filename = profileImage.substring(profileImage.lastIndexOf('/') + 1);
+    const filename = imageUri.substring(imageUri.lastIndexOf('/') + 1);
     const ref = firebase.storage().ref().child(filename);
     await ref.put(blob);
     blob.close();
@@ -43,7 +44,5 @@ export const uploadImage = async (profileImage, setUploading) => {
   } catch (error) {
     Alert.alert('Image upload failed');
     return null;
-  } finally {
-    setUploading(false);
   }
 };
