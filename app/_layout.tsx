@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import React from 'react'
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,6 +10,7 @@ import { Provider } from 'react-redux';
 import store from '../app/(redux)/store'; // Import the store
 import { QueryClientProvider } from '@tanstack/react-query';
 import queryClient from '../app/(services)/queryClient'; // Import the query client
+import * as NavigationBar from 'expo-navigation-bar';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -28,15 +29,20 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
+  useEffect(() => {
+    NavigationBar.setVisibilityAsync('hidden'); // Hide the bottom navigation bar
+  }, []);
+
   if (!loaded) {
     return null;
   }
 
   return (
-    <Provider store={store}> 
-      <QueryClientProvider client={queryClient}> {/* Wrap with QueryClientProvider */}
-        <TaskProvider>
-         
+    <>
+      <StatusBar style="auto" />
+      <Provider store={store}> 
+        <QueryClientProvider client={queryClient}> {/* Wrap with QueryClientProvider */}
+          <TaskProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="initial" />
               <Stack.Screen name="(tabs)" />
@@ -44,7 +50,6 @@ export default function RootLayout() {
               <Stack.Screen name="auth/login" />
               <Stack.Screen name="addtask" />
               <Stack.Screen name="auth/register" />
-              
               <Stack.Screen name="insurance" />
               <Stack.Screen name="clinic" />
               <Stack.Screen name="professional" />
@@ -60,10 +65,9 @@ export default function RootLayout() {
                 }} 
               />
             </Stack>
-            <StatusBar style="auto" />
-  
-        </TaskProvider>
-      </QueryClientProvider>
-    </Provider>
+          </TaskProvider>
+        </QueryClientProvider>
+      </Provider>
+    </>
   );
 }
