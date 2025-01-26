@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 
-export default function Inbox() {
+export default function Wallet() {
   const user = useSelector((state) => state.auth?.user);
 
 
