@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import Wallet from '../../screens/Inbox/Wallet'
+import Inbox from '../../screens/Inbox/Inbox'
 
 const wallet = () => {
   return (
     <View style={{ flex: 1 }}>
-      <Wallet />
+      <Inbox />
     </View>
   )
 }
