@@ -33,7 +33,6 @@ export default function Inbox() {
   });
 
   const user = useSelector((state) => state.auth?.user); // Access user from state with optional chaining
-  const [transactions, setTransactions] = useState([]);
   const [subaccountData, setSubaccountData] = useState({
     business_name: '',
     settlement_bank: '',
@@ -45,21 +44,7 @@ export default function Inbox() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content');
-
-    const loadTransactions = async () => {
-      const storedTransactions = await AsyncStorage.getItem('transactions');
-      if (storedTransactions) {
-        setTransactions(JSON.parse(storedTransactions));
-      } else {
-        setTransactions([
-          { type: 'credit', amount: '5000', comment: '', from: 'Alice Jackson' },
-          { type: 'debit', amount: '799', comment: '', to: 'William Muteti' },
-          { type: 'debit', amount: '2000', comment: '', to: 'Cassandra Gilbert' },
-          { type: 'credit', amount: '1000', comment: '', from: 'CREDIT INTEREST' },
-        ]);
-      }
-    };
+    StatusBar.setBarStyle('light-content'); // Set status bar style when component mounts
 
     const loadBanks = async () => {
       try {
@@ -70,28 +55,9 @@ export default function Inbox() {
       }
     };
 
-    loadTransactions();
     loadBanks();
     setLoading(false);
   }, []);
-
-  function getCreditAmount() {
-    return transactions
-      .map((t) => {
-        if (t.type === 'credit') return parseInt(t.amount); // Ensure amount is parsed as integer
-        return 0; // Return 0 if not credit
-      })
-      .reduce((acc, val) => acc + val, 0); // Simplify reduce function
-  }
-
-  function getDebitAmount() {
-    return transactions
-      .map((t) => {
-        if (t.type === 'debit') return parseInt(t.amount); // Ensure amount is parsed as integer
-        return 0; // Return 0 if not debit
-      })
-      .reduce((acc, val) => acc + val, 0); // Simplify reduce function
-  }
 
   const handleUpdatePayment = async () => {
     const { business_name, settlement_bank, account_number, percentage_charge } = subaccountData;
@@ -118,12 +84,14 @@ export default function Inbox() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size='large' />
+        <Text>Loading...</Text>
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1 }}>
+      <Text>Inbox Component Loaded</Text> 
       <LinearGradient
         style={{
           height: 260,
@@ -151,11 +119,7 @@ export default function Inbox() {
             >
             Dr. {user?.firstName}
             </Text>
-           
           </View>
-          <TouchableOpacity style={{ justifyContent: 'center' }}>
-            <Icon name='bell' color='#fff' size='26' />
-          </TouchableOpacity>
         </View>
       </LinearGradient>
       <View
@@ -242,7 +206,7 @@ export default function Inbox() {
             <Text
               style={{ fontSize: 16, marginTop: 4, fontFamily: 'NSRegular' }}
             >
-              ₹{getCreditAmount()}
+              ₹0
             </Text>
           </View>
           <View style={{ alignItems: 'center', flex: 1 }}>
@@ -251,7 +215,7 @@ export default function Inbox() {
             <Text
               style={{ fontSize: 16, marginTop: 4, fontFamily: 'NSRegular' }}
             >
-              ₹{getDebitAmount()}
+              ₹0
             </Text>
           </View>
           <View style={{ alignItems: 'center', flex: 1 }}>
@@ -260,7 +224,7 @@ export default function Inbox() {
             <Text
               style={{ fontSize: 16, marginTop: 4, fontFamily: 'NSRegular' }}
             >
-              ₹{getCreditAmount() - getDebitAmount()}
+              ₹0
             </Text>
           </View>
         </View>
@@ -280,54 +244,41 @@ export default function Inbox() {
             <Icon name='more-horizontal' size='24' />
           </TouchableOpacity>
         </View>
-        {transactions.map((t, index) => (
+        <View
+          style={{
+            backgroundColor: '#fff',
+            marginTop: 10,
+            borderRadius: 10,
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            flexDirection: 'row',
+          }}
+        >
+          <View>
+            <Icon name='arrow-down' size='30' color='green' />
+          </View>
           <View
-            key={`transaction-${index}`} // Add unique key prop
             style={{
-              backgroundColor: '#fff',
-              marginTop: 10,
-              borderRadius: 10,
-              paddingVertical: 6,
+              flex: 1,
+              justifyContent: 'center',
               paddingHorizontal: 10,
-              flexDirection: 'row',
             }}
           >
-            <View>
-              {t.type === 'credit' ? (
-                <Icon name='arrow-down' size='30' color='green' />
-              ) : (
-                <Icon name='arrow-up' size='30' color='red' />
-              )}
-            </View>
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                paddingHorizontal: 10,
-              }}
-            >
-              <Text style={{ fontFamily: 'NSRegular', fontSize: 16 }}>
-                {t.from ? t.from : t.to}
-              </Text>
-            </View>
-            <View
-              style={{
-                justifyContent: 'center',
-                paddingHorizontal: 10,
-              }}
-            >
-              {t.type === 'credit' ? (
-                <Text style={{ fontFamily: 'NSBold', color: 'green' }}>
-                  + ₹{t.amount}
-                </Text>
-              ) : (
-                <Text style={{ fontFamily: 'NSBold', color: 'red' }}>
-                  - ₹{t.amount}
-                </Text>
-              )}
-            </View>
+            <Text style={{ fontFamily: 'NSRegular', fontSize: 16 }}>
+              Sample Transaction
+            </Text>
           </View>
-        ))}
+          <View
+            style={{
+              justifyContent: 'center',
+              paddingHorizontal: 10,
+            }}
+          >
+            <Text style={{ fontFamily: 'NSBold', color: 'green' }}>
+              + ₹0
+            </Text>
+          </View>
+        </View>
         <View style={{ marginTop: 20, paddingHorizontal: 10 }}>
           <Text style={{ fontFamily: 'NSExtraBold', fontSize: 20 }}>
             Payment Method
