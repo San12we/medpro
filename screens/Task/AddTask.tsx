@@ -193,6 +193,7 @@ function Day({ userId, day, schedules, setSchedules }: { userId: string; day: st
 
 const AddTask = () => {
   const [schedules, setSchedules] = useState<any>({});
+  const [isSubmitted, setIsSubmitted] = useState(false); // Track if schedules have been submitted
   const user = useSelector((state: any) => state.auth?.user); // Access user from state with optional chaining
   const router = useRouter(); // Initialize router
   console.log('User:', user); // Log user for debugging
@@ -203,6 +204,7 @@ const AddTask = () => {
         const storedSchedules = await AsyncStorage.getItem('schedules');
         if (storedSchedules) {
           setSchedules(JSON.parse(storedSchedules));
+          setIsSubmitted(true); // Assume schedules are submitted if they are stored
         }
       } catch (error) {
         console.error('Error loading schedules:', error);
@@ -238,6 +240,7 @@ const AddTask = () => {
       if (response.ok) {
         alert('Schedules have been submitted successfully!');
         persistSchedules(schedules); // Persist schedules after successful submission
+        setIsSubmitted(true); // Mark schedules as submitted
       } else {
         alert('Failed to submit schedules');
       }
@@ -369,9 +372,11 @@ const AddTask = () => {
           />
         ))}
         {renderPreview()}
-        {!Object.keys(schedules).some((day) => schedules[day]?.length) && (
-          <Button title="Submit" onPress={handleSubmit} color="black" />
-        )}
+        <Button
+          title={isSubmitted ? "Update" : "Submit"}
+          onPress={handleSubmit}
+          color="black"
+        />
       </ScrollView>
     </View>
   );

@@ -36,7 +36,7 @@ export default function RootLayout() {
     <Provider store={store}> 
       <QueryClientProvider client={queryClient}> {/* Wrap with QueryClientProvider */}
         <TaskProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+         
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="initial" />
               <Stack.Screen name="(tabs)" />
@@ -44,7 +44,7 @@ export default function RootLayout() {
               <Stack.Screen name="auth/login" />
               <Stack.Screen name="addtask" />
               <Stack.Screen name="auth/register" />
-              <Stack.Screen name="payment" />
+              
               <Stack.Screen name="insurance" />
               <Stack.Screen name="clinic" />
               <Stack.Screen name="professional" />
@@ -61,7 +61,7 @@ export default function RootLayout() {
               />
             </Stack>
             <StatusBar style="auto" />
-          </ThemeProvider>
+  
         </TaskProvider>
       </QueryClientProvider>
     </Provider>

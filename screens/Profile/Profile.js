@@ -16,8 +16,9 @@ import FeatherIcon from '@expo/vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pickImage, uploadImage } from '../../utils/imageUtils';
 import { useRouter } from 'expo-router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux'; // Import useSelector
 import { clearUser } from '../../app/(redux)/userSlice'; // Import clearUser action
+import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
 
 export default function Example() {
   const [form, setForm] = useState({
@@ -25,36 +26,26 @@ export default function Example() {
     pushNotifications: false,
     availability: false,
   });
-  const [profileImage, setProfileImage] = useState(null);
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [uploading, setUploading] = useState(false);
   const [isPaymentModalVisible, setPaymentModalVisible] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [currentField, setCurrentField] = useState('');
   const [currentValue, setCurrentValue] = useState('');
   const [experience, setExperience] = useState(0);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [profileImage, setProfileImage] = useState('');
   const router = useRouter();
   const dispatch = useDispatch(); // Initialize dispatch
+  const user = useSelector((state) => state.auth?.user); // Access user from state with optional chaining
 
   useEffect(() => {
-    const loadProfileData = async () => {
-      const storedImage = await AsyncStorage.getItem('profileImage');
-      if (storedImage) {
-        setProfileImage(storedImage);
-      }
-
-      const userData = await AsyncStorage.getItem('userData');
-      if (userData) {
-        const { firstName, username: userEmail } = JSON.parse(userData);
-        setFullName(firstName);
-        setEmail(userEmail);
-      }
-    };
-
-    loadProfileData();
-  }, []);
+    if (user) {
+      setFullName(user.firstName);
+      setEmail(user.username);
+      setProfileImage(user.profileImage);
+    }
+  }, [user]);
 
   const handlePickImage = async () => {
     const imageUri = await pickImage();
@@ -80,18 +71,8 @@ export default function Example() {
     }
   };
 
-  const handlePaymentSetup = () => {
-    setPaymentModalVisible(true);
-  };
-
   const closePaymentModal = () => {
     setPaymentModalVisible(false);
-  };
-
-  const openModal = (field, value) => {
-    setCurrentField(field);
-    setCurrentValue(value);
-    setModalVisible(true);
   };
 
   const closeModal = () => {
@@ -101,18 +82,6 @@ export default function Example() {
   const saveField = () => {
     saveProfileData(currentField, currentValue);
     closeModal();
-  };
-
-  const incrementExperience = () => {
-    setExperience(experience + 1);
-    saveProfileData('experience', experience + 1);
-  };
-
-  const decrementExperience = () => {
-    if (experience > 0) {
-      setExperience(experience - 1);
-      saveProfileData('experience', experience - 1);
-    }
   };
 
   const handleLogout = async () => {
@@ -157,21 +126,20 @@ export default function Example() {
         <View style={[styles.section, { paddingTop: 4 }]}>
           <Text style={styles.sectionTitle}>Account</Text>
 
-          <View style={styles.sectionBody}>
             <TouchableOpacity
               onPress={handlePickImage}
               style={styles.profile}>
               <Image
                 alt=""
                 source={{
-                  uri: profileImage || 'https://via.placeholder.com/60',
+                  uri: user?.profileImage || 'https://via.placeholder.com/60',
                 }}
                 style={styles.profileAvatar} />
 
               <View style={styles.profileBody}>
-                <Text style={styles.profileName}>{fullName || 'John Doe'}</Text>
+                <Text style={styles.profileName}>{user?.firstName || 'John Doe'}</Text>
 
-                <Text style={styles.profileHandle}>{email || 'john@example.com'}</Text>
+                <Text style={styles.profileHandle}>{user?.username || 'john@example.com'}</Text>
               </View>
 
               <FeatherIcon
@@ -180,7 +148,7 @@ export default function Example() {
                 size={22} />
             </TouchableOpacity>
             {uploading && <Text style={styles.uploadingText}>Uploading...</Text>}
-          </View>
+        
         </View>
 
         <View style={styles.section}>
@@ -508,5 +476,10 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  profileGradient: {
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
   },
 });

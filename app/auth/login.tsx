@@ -1,26 +1,102 @@
 import React, { useState } from "react";
-import { TouchableOpacity, StyleSheet, View, Alert } from "react-native";
+import { TouchableOpacity, View, Image, TextInput, ScrollView, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
-import Background from "../../components/Background";
-import Logo from "../../components/Logo";
-import Header from "../../components/Header";
 import Button from "../../components/Button";
-
-import { theme } from "../../core/theme";
-import { emailValidator } from "../../helpers/emailValidator";
-import { passwordValidator } from "../../helpers/passwordValidator";
 import { loginUser } from "../(services)/api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
-import { loginAction } from "../(redux)/authSlice";
-import TextInput from "@/components/TextInput";
+import { loginAction } from "..//(redux)/authSlice";
+import { LoginImg, UserImg, PasswordImg } from "../../theme/Images";
+import { emailValidator } from "@/helpers/emailValidator";
+import { passwordValidator } from "@/helpers/passwordValidator";
+
+const styles = StyleSheet.create({
+  loginContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  loginImg: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  mainContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  welComeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  loginInputView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+  },
+  imgInput: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  loginInput: {
+    flex: 1,
+    height: 40,
+  },
+  feedbackText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  forgetText: {
+    alignSelf: 'flex-end',
+    marginBottom: 20,
+    color: '#007bff',
+  },
+  btn: {
+    width: '100%',
+    padding: 15,
+    backgroundColor: '#c5f0a4',
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  btnText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  contiueText: {
+    marginBottom: 20,
+    color: '#a9a9a9',
+  },
+
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 20,
+  },
+  signupText: {
+    color: '#007bff',
+    marginTop: 20,
+
+  },
+});
 
 export default function LoginScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [email, setEmail] = useState({ value: "", error: "" });
   const [password, setPassword] = useState({ value: "", error: "" });
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   const onLoginPressed = async () => {
     const emailError = emailValidator(email.value);
@@ -31,6 +107,8 @@ export default function LoginScreen() {
       return;
     }
 
+    setLoading(true);
+    setFeedback("");
     try {
       const response = await loginUser({ email: email.value, password: password.value });
       if (response.token) {
@@ -43,74 +121,59 @@ export default function LoginScreen() {
           router.replace("/(tabs)/profile");
         }
       } else {
-        Alert.alert("Login failed", "Invalid email or password");
+        setFeedback("Invalid email or password");
       }
     } catch (error) {
-      Alert.alert("Login failed", "An error occurred. Please try again.");
+      setFeedback("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Background>
-      <Logo />
-      <Header>Welcome back.</Header>
-      <TextInput
-        label="Email"
-        returnKeyType="next"
-        value={email.value}
-        onChangeText={(text) => setEmail({ value: text, error: "" })}
-        error={!!email.error}
-        errorText={email.error}
-        autoCapitalize="none"
-        autoCompleteType="email"
-        textContentType="emailAddress"
-        keyboardType="email-address"
-      />
-      <TextInput
-        label="Password"
-        returnKeyType="done"
-        value={password.value}
-        onChangeText={(text) => setPassword({ value: text, error: "" })}
-        error={!!password.error}
-        errorText={password.error}
-        secureTextEntry
-      />
-      <View style={styles.forgotPassword}>
+    <ScrollView contentContainerStyle={styles.loginContainer}>
+      <Image source={LoginImg} style={styles.loginImg} />
+      <View style={styles.mainContainer}>
+        <Text style={styles.welComeText}>Hello, {"\n"} Welcome back</Text>
+        <View style={styles.loginInputView}>
+          <Image source={UserImg} style={styles.imgInput} />
+          <TextInput
+            placeholder="Email"
+            style={styles.loginInput}
+            value={email.value}
+            onChangeText={(text) => setEmail({ value: text, error: "" })}
+            autoCapitalize="none"
+            textContentType="emailAddress"
+            keyboardType="email-address"
+          />
+        </View>
+        <View style={styles.loginInputView}>
+          <Image source={PasswordImg} style={styles.imgInput} />
+          <TextInput
+            placeholder="Password"
+            style={styles.loginInput}
+            value={password.value}
+            onChangeText={(text) => setPassword({ value: text, error: "" })}
+            secureTextEntry
+          />
+        </View>
+         <View style={styles.forgotPassword}>
         <TouchableOpacity onPress={() => router.push("/auth/resetPassword")}>
           <Text style={styles.forgot}>Forgot your password?</Text>
         </TouchableOpacity>
       </View>
-      <Button mode="contained" onPress={onLoginPressed}>
-        Log in
-      </Button>
-      <View style={styles.row}>
-        <Text>You do not have an account yet?</Text>
-      </View>
-      <View style={styles.row}>
-        <TouchableOpacity onPress={() => router.replace("/auth/register")}>
-          <Text style={styles.link}>Create!</Text>
+        <TouchableOpacity
+          style={[styles.btn, loading && { backgroundColor: '#ccc' }]}
+          onPress={onLoginPressed}
+          disabled={loading}
+        >
+          <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
         </TouchableOpacity>
+        <Text style={styles.contiueText}>or continue with</Text>
       </View>
-    </Background>
+      <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+        <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  forgotPassword: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 10,
-  },
-  row: {
-    flexDirection: "row",
-    marginTop: 4,
-  },
-  forgot: {
-    fontSize: 13,
-    color: theme.colors.secondary,
-  },
-  link: {
-    fontWeight: "bold",
-    color: theme.colors.primary,
-  },
-});

@@ -34,7 +34,6 @@ export default function Inbox() {
 
   const user = useSelector((state) => state.auth?.user); // Access user from state with optional chaining
   const [transactions, setTransactions] = useState([]);
-  const [userState, setUser] = useState({ fullName: '', email: '', profileImage: '' });
   const [subaccountData, setSubaccountData] = useState({
     business_name: '',
     settlement_bank: '',
@@ -47,17 +46,6 @@ export default function Inbox() {
 
   useEffect(() => {
     StatusBar.setBarStyle('light-content');
-
-    const loadUserData = async () => {
-      // Remove AsyncStorage usage for user data
-      if (user) {
-        setUser({
-          fullName: user.fullName,
-          email: user.email,
-          profileImage: user.profileImage || 'https://randomuser.me/api/portraits/men/86.jpg',
-        });
-      }
-    };
 
     const loadTransactions = async () => {
       const storedTransactions = await AsyncStorage.getItem('transactions');
@@ -82,36 +70,27 @@ export default function Inbox() {
       }
     };
 
-    loadUserData();
     loadTransactions();
     loadBanks();
     setLoading(false);
-  }, [user]);
+  }, []);
 
   function getCreditAmount() {
     return transactions
       .map((t) => {
-        if (t.type === 'credit') return t.amount;
+        if (t.type === 'credit') return parseInt(t.amount); // Ensure amount is parsed as integer
+        return 0; // Return 0 if not credit
       })
-      .reduce((acc, val) => {
-        if (acc !== undefined && val !== undefined) {
-          return acc + parseInt(val);
-        }
-        return acc;
-      }, 0);
+      .reduce((acc, val) => acc + val, 0); // Simplify reduce function
   }
 
   function getDebitAmount() {
     return transactions
       .map((t) => {
-        if (t.type === 'debit') return t.amount;
+        if (t.type === 'debit') return parseInt(t.amount); // Ensure amount is parsed as integer
+        return 0; // Return 0 if not debit
       })
-      .reduce((acc, val) => {
-        if (acc !== undefined && val !== undefined) {
-          return acc + parseInt(val);
-        }
-        return acc;
-      }, 0);
+      .reduce((acc, val) => acc + val, 0); // Simplify reduce function
   }
 
   const handleUpdatePayment = async () => {
@@ -161,7 +140,7 @@ export default function Inbox() {
           <TouchableOpacity>
             <Image
               style={{ width: 50, height: 50, borderRadius: 100 }}
-              source={{ uri: userState.profileImage }}
+              source={{ uri: user?.profileImage || 'https://randomuser.me/api/portraits/men/86.jpg' }}
             />
           </TouchableOpacity>
           <View
@@ -170,7 +149,7 @@ export default function Inbox() {
             <Text
               style={{ fontFamily: 'NSExtraBold', fontSize: 16, color: '#fff' }}
             >
-            Dr.  {userState.firstName}
+            Dr. {user?.firstName}
             </Text>
            
           </View>

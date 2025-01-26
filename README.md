@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, Picker, FlatList, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, FlatList, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +9,7 @@ import { styles } from './Style/AddTaskStyle';
 import { backArrowImg, calenderImg } from '../../theme/Images';
 import { Colors } from "../../theme/Colors";
 import { Snackbar } from 'react-native-paper'; // Import Snackbar
+import { Picker } from '@react-native-picker/picker'; // Ensure Picker is imported from correct package
 
 export default function AddTask() {
   const router = useRouter();
@@ -19,7 +20,14 @@ export default function AddTask() {
   const [inputFocus, setInputFocus] = useState('');
   const [assignTo, setAssignTo] = useState('');
   const [recurrence, setRecurrence] = useState('none');
-  const [currentShift, setCurrentShift] = useState({ shiftName: '', startTime: initialDate, endTime: initialDate, durationOfConsultation: 30, breaks: [] });
+  const [currentShift, setCurrentShift] = useState({
+    shiftName: '',
+    startTime: initialDate,
+    endTime: initialDate,
+    durationOfConsultation: 30,
+    breaks: [],
+    slots: [], // Initialize slots to avoid undefined errors
+  });
   const [shifts, setShifts] = useState([]);
   const [userId, setUserId] = useState('');
   const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility state
@@ -248,6 +256,286 @@ export default function AddTask() {
       >
         {snackbarMessage}
       </Snackbar>
+    </ScrollView>
+  );
+}
+
+
+
+import React, { useState } from "react";
+import { TouchableOpacity, View, Image, TextInput, ScrollView } from "react-native";
+import { Text } from "react-native-paper";
+import { useRouter } from "expo-router";
+import Button from "../../components/Button";
+import { loginUser } from "../(services)/api/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { loginAction } from "../(redux)/authSlice";
+import { styles } from "../../screens/Login/Style/LoginStyle";
+import { LoginImg, UserImg, PasswordImg } from "../../theme/Images";
+import { emailValidator } from "@/helpers/emailValidator";
+import { passwordValidator } from "@/helpers/passwordValidator";
+import Toast from "react-native-toast-message";
+
+export default function LoginScreen() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const [email, setEmail] = useState({ value: "", error: "" });
+  const [password, setPassword] = useState({ value: "", error: "" });
+  const [loading, setLoading] = useState(false);
+
+  const onLoginPressed = async () => {
+    const emailError = emailValidator(email.value);
+    const passwordError = passwordValidator(password.value);
+    if (emailError || passwordError) {
+      setEmail({ ...email, error: emailError });
+      setPassword({ ...password, error: passwordError });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await loginUser({ email: email.value, password: password.value });
+      if (response.token) {
+        await AsyncStorage.setItem("userToken", response.token);
+        await AsyncStorage.setItem("userId", response.user._id);
+        dispatch(loginAction({ user: response.user, token: response.token, professionalId: response.professionalId }));
+        if (response.user.completedProfile) {
+          router.replace("/(tabs)/home");
+        } else {
+          router.replace("/(tabs)/profile");
+        }
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Login failed",
+          text2: "Invalid email or password",
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Login failed",
+        text2: "An error occurred. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.loginContainer}>
+      <Image source={LoginImg} style={styles.loginImg} />
+      <View style={styles.mainContainer}>
+        <Text style={styles.welComeText}>Hello, {"\n"} Welcome back again</Text>
+        <View style={styles.loginInputView}>
+          <Image source={UserImg} style={styles.imgInput} />
+          <TextInput
+            placeholder="Email"
+            style={styles.loginInput}
+            value={email.value}
+            onChangeText={(text) => setEmail({ value: text, error: "" })}
+            autoCapitalize="none"
+            textContentType="emailAddress"
+            keyboardType="email-address"
+          />
+        </View>
+        <View style={styles.loginInputView}>
+          <Image source={PasswordImg} style={styles.imgInput} />
+          <TextInput
+            placeholder="Password"
+            style={styles.loginInput}
+            value={password.value}
+            onChangeText={(text) => setPassword({ value: text, error: "" })}
+            secureTextEntry
+          />
+        </View>
+        <Text style={styles.forgetText}>Forget Password</Text>
+        <TouchableOpacity style={styles.btn} onPress={onLoginPressed} disabled={loading}>
+          <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
+        </TouchableOpacity>
+        <Text style={styles.contiueText}>or continue with</Text>
+      </View>
+      <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+        <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+      </TouchableOpacity>
+      <Toast />
+    </ScrollView>
+  );
+}
+
+
+
+
+
+
+
+import React, { useState } from "react";
+import { TouchableOpacity, View, Image, TextInput, ScrollView, StyleSheet } from "react-native";
+import { Text } from "react-native-paper";
+import { useRouter } from "expo-router";
+import Button from "../../components/Button";
+import { loginUser } from "../(services)/api/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { loginAction } from "..//(redux)/authSlice";
+import { LoginImg, UserImg, PasswordImg } from "../../theme/Images";
+import { emailValidator } from "@/helpers/emailValidator";
+import { passwordValidator } from "@/helpers/passwordValidator";
+
+const styles = StyleSheet.create({
+  loginContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  loginImg: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  mainContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  welComeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  loginInputView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+  },
+  imgInput: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  loginInput: {
+    flex: 1,
+    height: 40,
+  },
+  feedbackText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  forgetText: {
+    alignSelf: 'flex-end',
+    marginBottom: 20,
+    color: '#007bff',
+  },
+  btn: {
+    width: '100%',
+    padding: 15,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  btnText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  contiueText: {
+    marginBottom: 20,
+    color: '#a9a9a9',
+  },
+  signupText: {
+    color: '#007bff',
+    marginTop: 20,
+  },
+});
+
+export default function LoginScreen() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const [email, setEmail] = useState({ value: "", error: "" });
+  const [password, setPassword] = useState({ value: "", error: "" });
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  const onLoginPressed = async () => {
+    const emailError = emailValidator(email.value);
+    const passwordError = passwordValidator(password.value);
+    if (emailError || passwordError) {
+      setEmail({ ...email, error: emailError });
+      setPassword({ ...password, error: passwordError });
+      return;
+    }
+
+    setLoading(true);
+    setFeedback("");
+    try {
+      const response = await loginUser({ email: email.value, password: password.value });
+      if (response.token) {
+        await AsyncStorage.setItem("userToken", response.token);
+        await AsyncStorage.setItem("userId", response.user._id);
+        dispatch(loginAction({ user: response.user, token: response.token, professionalId: response.professionalId }));
+        if (response.user.completedProfile) {
+          router.replace("/(tabs)/home");
+        } else {
+          router.replace("/(tabs)/profile");
+        }
+      } else {
+        setFeedback("Invalid email or password");
+      }
+    } catch (error) {
+      setFeedback("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.loginContainer}>
+      <Image source={LoginImg} style={styles.loginImg} />
+      <View style={styles.mainContainer}>
+        <Text style={styles.welComeText}>Hello, {"\n"} Welcome back again</Text>
+        <View style={styles.loginInputView}>
+          <Image source={UserImg} style={styles.imgInput} />
+          <TextInput
+            placeholder="Email"
+            style={styles.loginInput}
+            value={email.value}
+            onChangeText={(text) => setEmail({ value: text, error: "" })}
+            autoCapitalize="none"
+            textContentType="emailAddress"
+            keyboardType="email-address"
+          />
+        </View>
+        <View style={styles.loginInputView}>
+          <Image source={PasswordImg} style={styles.imgInput} />
+          <TextInput
+            placeholder="Password"
+            style={styles.loginInput}
+            value={password.value}
+            onChangeText={(text) => setPassword({ value: text, error: "" })}
+            secureTextEntry
+          />
+        </View>
+         <View style={styles.forgotPassword}>
+        <TouchableOpacity onPress={() => router.push("/auth/resetPassword")}>
+          <Text style={styles.forgot}>Forgot your password?</Text>
+        </TouchableOpacity>
+      </View>
+        <TouchableOpacity style={styles.btn} onPress={onLoginPressed} disabled={loading}>
+          <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
+        </TouchableOpacity>
+        <Text style={styles.contiueText}>or continue with</Text>
+      </View>
+      <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+        <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
