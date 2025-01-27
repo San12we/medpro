@@ -11,7 +11,8 @@ import {
   ScrollView,
   ActivityIndicator,
   FlatList,
-  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -20,7 +21,14 @@ import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { firebase } from '../../firebase/config';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
+import { fontSize, iconSize, spacing } from '../../constants/dimensions';
+import { Colors } from '../../constants/Colors';
+import { fontFamily } from '../../constants/fontFamily';
+import CustomInput from '../../components/CustomInput';
+import Feather from "react-native-vector-icons/Feather";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { backArrowImg } from '@/theme/Images';
 
 const PracticeInformation = () => {
   const [profileImage, setProfileImage] = useState(null);
@@ -51,7 +59,7 @@ const PracticeInformation = () => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const navigation = useNavigation();
-  console.log('User ID:', userId);
+  const { colors } = useTheme();
 
   useEffect(() => {
     const loadProfileImage = async () => {
@@ -71,7 +79,6 @@ const PracticeInformation = () => {
         if (storedUserData) {
           const userData = JSON.parse(storedUserData);
           setUserId(userData.userId);
-          console.log('Retrieved user data:', userData);
         }
       } catch (error) {
         console.error('Failed to load user data', error);
@@ -103,18 +110,18 @@ const PracticeInformation = () => {
   }, [missingFields]);
 
   const pickImage = async () => {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-  
-      if (!result.cancelled) {
-        setProfileImage(result.assets[0].uri);
-      }
-    };
-    
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
   const toggleDay = (dayIndex) => {
     const updatedDays = [...workingDays];
     updatedDays[dayIndex].active = !updatedDays[dayIndex].active;
@@ -150,9 +157,7 @@ const PracticeInformation = () => {
   const uploadImage = async () => {
     setUploading(true);
     try {
-      console.log('Starting image upload...');
       const { uri } = await FileSystem.getInfoAsync(profileImage);
-      console.log('Image URI:', uri);
       const blob = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.onload = () => resolve(xhr.response);
@@ -163,13 +168,11 @@ const PracticeInformation = () => {
       });
 
       const filename = profileImage.substring(profileImage.lastIndexOf('/') + 1);
-      console.log('Filename:', filename);
       const ref = firebase.storage().ref().child(filename);
       await ref.put(blob);
       blob.close();
 
       const url = await ref.getDownloadURL();
-      console.log('Image uploaded successfully. URL:', url);
       setProfileImage(url);
       await AsyncStorage.setItem('profileImage', url);
 
@@ -189,19 +192,19 @@ const PracticeInformation = () => {
       Alert.alert('Please fill out all mandatory fields.');
       return;
     }
-  
+
     const selectedDays = workingDays.filter((day) => day.active).map((day) => day.day);
-  
+
     if (selectedDays.length === 0 || !workingHours.startTime || !workingHours.endTime) {
       Alert.alert('Please select working days and specify working hours.');
       return;
     }
-  
+
     if (selectedInsuranceProviders.length === 0) {
       Alert.alert('Please select at least one insurance provider.');
       return;
     }
-  
+
     setUploading(true);
     try {
       let profileImageUrl = profileImage;
@@ -211,8 +214,7 @@ const PracticeInformation = () => {
           throw new Error('Failed to upload image');
         }
       }
-  
-      console.log('Profile image URL:', profileImageUrl);
+
       const payload = {
         userId,
         practiceName,
@@ -223,8 +225,7 @@ const PracticeInformation = () => {
         experience,
         insuranceProviders: selectedInsuranceProviders,
       };
-      console.log('Payload:', payload);
-  
+
       const response = await fetch('https://medplus-health.onrender.com/api/professionals/practice', {
         method: 'POST',
         headers: {
@@ -232,14 +233,11 @@ const PracticeInformation = () => {
         },
         body: JSON.stringify(payload),
       });
-  
-      console.log('Response status:', response.status);
+
       const responseBody = await response.json();
-      console.log('Response body:', responseBody);
-  
+
       if (!response.ok) throw new Error('Failed to update practice information');
-  
-      console.log('Practice information updated successfully');
+
       Alert.alert('Practice information updated successfully.');
       router.push('/profile/Verification');
     } catch (error) {
@@ -288,206 +286,189 @@ const PracticeInformation = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={goBack}>
-          <Text style={styles.goBackText}>Go Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Practice Information</Text>
-      </View>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.profileContainer}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Text style={styles.placeholderText}>Add Photo</Text>
-            </View>
-          )}
-          <TouchableOpacity style={styles.editButton} onPress={pickImage}>
-            <Text style={styles.editButtonText}>Upload</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={goBack}>
+            <Image source={backArrowImg} style={styles.backArrow} />
           </TouchableOpacity>
+          <Text style={styles.textAdd}>Practice Information</Text>
         </View>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Clinic Name (Required)"
-          value={practiceName}
-          onChangeText={setPracticeName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Location (Required)"
-          value={practiceLocation}
-          onChangeText={setPracticeLocation}
-        />
-
-        {/* Insurance Providers Section */}
-        <Text style={styles.sectionHeader}>Supported Insurance Providers</Text>
-        <View style={styles.insuranceProvidersContainer}>
-          <FlatList
-            data={insuranceProviders}
-            renderItem={renderInsuranceProvider}
-            keyExtractor={(item) => item._id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-
-        {/* Working Days Section */}
-        <Text style={styles.sectionHeader}>Working Days</Text>
-        <View style={styles.dayCardsContainer}>
-          {workingDays.map((day, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.dayCard, day.active && styles.activeDayCard]}
-              onPress={() => toggleDay(index)}
-            >
-              <Text style={styles.dayCardText}>{day.day}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Working Hours Section */}
-        <Text style={styles.sectionHeader}>Working Hours</Text>
-        <View style={styles.hoursContainer}>
-          <TouchableOpacity onPress={() => setShowStartTimePicker(true)}>
-            <TextInput
-              style={styles.input}
-              placeholder="Start Time (e.g., 9:00 AM)"
-              value={workingHours.startTime}
-              editable={false}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowEndTimePicker(true)}>
-            <TextInput
-              style={styles.input}
-              placeholder="End Time (e.g., 5:00 PM)"
-              value={workingHours.endTime}
-              editable={false}
-            />
-          </TouchableOpacity>
-        </View>
-        {showStartTimePicker && (
-          <DateTimePicker
-            value={new Date()}
-            mode="time"
-            display="default"
-            onChange={handleStartTimeChange}
-          />
-        )}
-        {showEndTimePicker && (
-          <DateTimePicker
-            value={new Date()}
-            mode="time"
-            display="default"
-            onChange={handleEndTimeChange}
-          />
-        )}
-
-        {/* Experience Section */}
-        <Text style={styles.sectionHeader}>Experience (Optional)</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowExperienceInput(true)}>
-          <Text style={styles.addButtonText}>Add Experience</Text>
-        </TouchableOpacity>
-
-        {showExperienceInput && (
-          <View style={styles.experienceInputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Institution"
-              value={institution}
-              onChangeText={setInstitution}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Year"
-              value={year}
-              onChangeText={setYear}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Roles"
-              value={roles}
-              onChangeText={setRoles}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Notable Achievement"
-              value={notableAchievement}
-              onChangeText={setNotableAchievement}
-            />
-            <TouchableOpacity style={styles.addButton} onPress={addExperience}>
-              <Text style={styles.addButtonText}>Save Experience</Text>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: 2 * spacing.xl }}>
+          <View style={styles.profileContainer}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text style={styles.placeholderText}>Add Photo</Text>
+              </View>
+            )}
+            <TouchableOpacity style={styles.editButton} onPress={pickImage}>
+              <Text style={styles.editButtonText}>Upload</Text>
             </TouchableOpacity>
           </View>
-        )}
 
-        {experience.length > 0 && (
-          <View style={styles.experienceList}>
-            {experience.map((exp, index) => (
-              <View key={index} style={styles.experienceItem}>
-                <Text style={styles.experienceInstitution}>{exp.institution}</Text>
-                <Text style={styles.experienceDetails}>
-                  {exp.year} - {exp.roles}
-                </Text>
-                <Text style={styles.experienceAchievement}>
-                  Achievement: {exp.notableAchievement}
-                </Text>
-              </View>
+          <CustomInput
+            label='Clinic Name (Required)' placeholder='Enter clinic name'
+            icon={<Ionicons name={"business-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+            value={practiceName} onChangeText={setPracticeName}
+          />
+          <CustomInput
+            label='Location (Required)' placeholder='Enter location'
+            icon={<Ionicons name={"location-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+            value={practiceLocation} onChangeText={setPracticeLocation}
+          />
+
+          <Text style={styles.sectionHeader}>Supported Insurance Providers</Text>
+          <View style={styles.insuranceProvidersContainer}>
+            <FlatList
+              data={insuranceProviders}
+              renderItem={renderInsuranceProvider}
+              keyExtractor={(item) => item._id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+
+          <Text style={styles.sectionHeader}>Working Days</Text>
+          <View style={styles.dayCardsContainer}>
+            {workingDays.map((day, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.dayCard, day.active && styles.activeDayCard]}
+                onPress={() => toggleDay(index)}
+              >
+                <Text style={styles.dayCardText}>{day.day}</Text>
+              </TouchableOpacity>
             ))}
           </View>
-        )}
 
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={handleSubmit}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Submit</Text>
+          <Text style={styles.sectionHeader}>Working Hours</Text>
+          <View style={styles.hoursContainer}>
+            <TouchableOpacity onPress={() => setShowStartTimePicker(true)}>
+              <TextInput
+                style={styles.input}
+                placeholder="Start Time (e.g., 9:00 AM)"
+                value={workingHours.startTime}
+                editable={false}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowEndTimePicker(true)}>
+              <TextInput
+                style={styles.input}
+                placeholder="End Time (e.g., 5:00 PM)"
+                value={workingHours.endTime}
+                editable={false}
+              />
+            </TouchableOpacity>
+          </View>
+          {showStartTimePicker && (
+            <DateTimePicker
+              value={new Date()}
+              mode="time"
+              display="default"
+              onChange={handleStartTimeChange}
+            />
           )}
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+          {showEndTimePicker && (
+            <DateTimePicker
+              value={new Date()}
+              mode="time"
+              display="default"
+              onChange={handleEndTimeChange}
+            />
+          )}
+
+          <Text style={styles.sectionHeader}>Experience (Optional)</Text>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowExperienceInput(true)}>
+            <Text style={styles.addButtonText}>Add Experience</Text>
+          </TouchableOpacity>
+
+          {showExperienceInput && (
+            <View style={styles.experienceInputContainer}>
+              <CustomInput
+                label='Institution' placeholder='Enter institution'
+                icon={<Ionicons name={"school-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                value={institution} onChangeText={setInstitution}
+              />
+              <CustomInput
+                label='Year' placeholder='Enter year'
+                icon={<Ionicons name={"calendar-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                value={year} onChangeText={setYear}
+              />
+              <CustomInput
+                label='Roles' placeholder='Enter roles'
+                icon={<Feather name={"briefcase"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                value={roles} onChangeText={setRoles}
+              />
+              <CustomInput
+                label='Notable Achievement' placeholder='Enter notable achievement'
+                icon={<Feather name={"award"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                value={notableAchievement} onChangeText={setNotableAchievement}
+              />
+              <TouchableOpacity style={styles.addButton} onPress={addExperience}>
+                <Text style={styles.addButtonText}>Save Experience</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {experience.length > 0 && (
+            <View style={styles.experienceList}>
+              {experience.map((exp, index) => (
+                <View key={index} style={styles.experienceItem}>
+                  <Text style={styles.experienceInstitution}>{exp.institution}</Text>
+                  <Text style={styles.experienceDetails}>
+                    {exp.year} - {exp.roles}
+                  </Text>
+                  <Text style={styles.experienceAchievement}>
+                    Achievement: {exp.notableAchievement}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={[styles.submitButton, { borderColor: Colors.light.orange }]}
+            onPress={handleSubmit}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={[styles.submitButtonText, { color: Colors.light.orange }]}>Submit</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    padding: spacing.md,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
-  goBackText: {
-    color: '#007BFF',
-    fontSize: 16,
+  backArrow: {
+    width: 20,
+    height: 20,
+    tintColor: Colors.light.textPrimary 
   },
-  headerTitle: {
-    fontSize: 18,
+  textAdd: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   profileContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   profileImage: {
     width: 100,
@@ -506,77 +487,63 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   editButton: {
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: '#007BFF',
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    backgroundColor: Colors.light.orange,
     borderRadius: 8,
   },
   editButtonText: {
     color: '#fff',
   },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 8,
-  },
   sectionHeader: {
-    fontSize: 18,
+    fontSize: fontSize.lg,
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
+    marginBottom: spacing.sm,
+    color: Colors.light.textPrimary,
   },
   dayCardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   dayCard: {
-    padding: 8,
+    padding: spacing.sm,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 8,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
   },
   activeDayCard: {
-    backgroundColor: '#007BFF',
-    borderColor: '#007BFF',
+    backgroundColor: Colors.light.orange,
+    borderColor: Colors.light.orange,
   },
   dayCardText: {
-    color: '#333',
+    color: Colors.light.textPrimary,
   },
   hoursContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   addButton: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   addButtonText: {
-    fontSize: 16,
-    color: '#007BFF',
+    fontSize: fontSize.md,
+    color: Colors.light.orange,
     fontWeight: '600',
   },
   experienceInputContainer: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   experienceList: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   experienceItem: {
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    padding: spacing.md,
   },
   experienceInstitution: {
     fontSize: 16,

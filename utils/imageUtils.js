@@ -13,7 +13,7 @@ export const pickImage = async () => {
   });
 
   if (!result.cancelled) {
-    return result.uri;
+    return result.assets[0].uri;
   } else {
     return null;
   }

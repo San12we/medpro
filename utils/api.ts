@@ -50,3 +50,21 @@ export const createSubaccount = async (data: {
     throw new Error('Failed to create subaccount.');
   }
 };
+
+export const updateDoctorProfile = async (payload: {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  profileImage: string;
+}) => {
+  try {
+    const response = await axios.post('https://medplus-health.onrender.com/api/users/updateDoctorProfile', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+  } catch (error) {
+    throw new Error('Failed to update profile');
+  }
+};

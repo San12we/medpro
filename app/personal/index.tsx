@@ -1,221 +1,216 @@
-import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  Image,
-  View,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
-import { useRouter } from 'expo-router'; // Import useRouter
-import { firebase } from '../../firebase/config';
-import { backArrowImg } from '../../theme/Images';
-const DoctorRegistrationForm = () => {
-  const [profileImage, setProfileImage] = useState(null);
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const router = useRouter(); // Initialize useRouter
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-  useEffect(() => {
-    const loadProfileImage = async () => {
-      const storedImage = await AsyncStorage.getItem('profileImage');
-      if (storedImage) {
-        setProfileImage(storedImage);
-      }
-    };
+import { fontSize, iconSize, spacing } from '../../constants/dimensions'
+import { Colors } from '../../constants/Colors'
+import { fontFamily } from '../../constants/fontFamily'
+import CustomInput from '../../components/CustomInput'
+import Feather from "react-native-vector-icons/Feather"
+import Ionicons from "react-native-vector-icons/Ionicons"
 
-    loadProfileImage();
-  }, []);
+import { useTheme } from '@react-navigation/native'
+import { ProfileImg, backArrowImg } from '@/theme/Images'
 
- 
+import { pickImage, uploadImage } from '../../utils/imageUtils'
+import { updateDoctorProfile } from '../../utils/api'
+import { useRouter } from 'expo-router'
+import { useDispatch, useSelector } from 'react-redux'
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
 
-    if (!result.cancelled) {
-      setProfileImage(result.assets[0].uri);
-    }
-  };
+const ProfileScreen = () => {
+    const { colors } = useTheme()
+    const [profileImage, setProfileImage] = useState(null)
+    const [fullName, setFullName] = useState('')
+    const [email, setEmail] = useState('')
+    const [phoneNumber, setPhoneNumber] = useState('')
+    const [uploading, setUploading] = useState(false)
+    const router = useRouter()
+    const dispatch = useDispatch()
+    const user = useSelector((state) => state.auth?.user)
 
-  const uploadImage = async () => {
-    setUploading(true);
-    try {
-      console.log('Starting image upload...');
-      const { uri } = await FileSystem.getInfoAsync(profileImage);
-      console.log('Image URI:', uri);
-      const blob = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => resolve(xhr.response);
-        xhr.onerror = (e) => reject(new TypeError('Network request failed'));
-        xhr.responseType = 'blob';
-        xhr.open('GET', uri, true);
-        xhr.send(null);
-      });
+    useEffect(() => {
+        if (user) {
+            setFullName(user.firstName)
+            setEmail(user.username)
+            setProfileImage(user.profileImage)
+        }
+    }, [user])
 
-      const filename = profileImage.substring(profileImage.lastIndexOf('/') + 1);
-      console.log('Filename:', filename);
-      const ref = firebase.storage().ref().child(filename);
-      await ref.put(blob);
-      blob.close();
-
-      const url = await ref.getDownloadURL();
-      console.log('Image uploaded successfully. URL:', url);
-      setProfileImage(url);
-      await AsyncStorage.setItem('profileImage', url);
-
-      Alert.alert('Profile image uploaded successfully');
-      return url;
-    } catch (error) {
-      console.error('Image upload failed:', error);
-      Alert.alert('Image upload failed');
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!profileImage || !fullName || !email || !phoneNumber) {
-      Alert.alert('Please fill out all fields and upload a profile image.');
-      return;
+    const handlePickImage = async () => {
+        const imageUri = await pickImage()
+        if (imageUri) {
+            setProfileImage(imageUri)
+        }
     }
 
-    try {
-      console.log('Starting profile update...');
-      const profileImageUrl = await uploadImage();
-      if (!profileImageUrl) {
-        throw new Error('Failed to upload image');
-      }
+    const handleSubmit = async () => {
+        if (!profileImage || !fullName || !email || !phoneNumber) {
+            Alert.alert('Please fill out all fields and upload a profile image.')
+            return
+        }
 
-      console.log('Profile image URL:', profileImageUrl);
-      const payload = {
-        fullName,
-        email,
-        phoneNumber,
-        profileImage: profileImageUrl,
-      };
-      console.log('Payload:', payload);
+        try {
+            setUploading(true)
+            const profileImageUrl = await uploadImage(profileImage)
+            if (!profileImageUrl) {
+                throw new Error('Failed to upload image')
+            }
 
-      const response = await fetch('https://medplus-health.onrender.com/api/users/updateDoctorProfile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+            const payload = {
+                fullName,
+                email,
+                phoneNumber,
+                profileImage: profileImageUrl,
+            }
 
-      if (!response.ok) throw new Error('Failed to update profile');
-
-     
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      Alert.alert('Failed to update profile');
+            await updateDoctorProfile(payload)
+        } catch (error) {
+            console.error('Failed to update profile:', error)
+            Alert.alert('Failed to update profile')
+        } finally {
+            setUploading(false)
+        }
     }
-  };
 
-  
-  const goback = () => {
-    router.push('/(tabs)/profile');
-  };
+    const goback = () => {
+        router.push('/(tabs)/profile')
+    }
 
-  
+    return (
+        <KeyboardAvoidingView style={{ flex: 1, backgroundColor: Colors.light.background }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={goback}>
+                        <Image source={backArrowImg} style={[styles.backArrow, { tintColor: Colors.light.textPrimary }]} />
+                    </TouchableOpacity>
+                    <Text style={styles.textAdd}>Personal Information</Text>
+                </View>
+                <ScrollView style={[styles.container, { backgroundColor: Colors.light.background }]} contentContainerStyle={{ paddingBottom: 2 * spacing.xl }} showsVerticalScrollIndicator={false}>
+             
+                    <View style={styles.profileImageContainer}>
+                        {profileImage ? (
+                            <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                        ) : (
+                            <Image source={ProfileImg} style={styles.profileImage} />
+                        )}
+                        <TouchableOpacity style={[styles.editIconContainer, { backgroundColor: Colors.light.background }]} onPress={handlePickImage}>
+                            <Feather name={"edit-3"} size={iconSize.md} color={Colors.light.orange} />
+                        </TouchableOpacity>
+                    </View>
 
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <SafeAreaView style={styles.container}>
-        {/* header section */}
-       <View style={styles.header}>
-               <TouchableOpacity onPress={goback}>
-                 <Image source={backArrowImg} style={styles.backArrow} />
-               </TouchableOpacity>
-        <Text style={styles.textAdd}>Personal Information</Text>
-             </View>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.profileContainer}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
-            ) : (
-              <View style={styles.placeholderImage}>
-                <Text style={styles.placeholderText}>Add Photo</Text>
-              </View>
-            )}
-            <TouchableOpacity style={styles.editButton} onPress={pickImage}>
-              <Text style={styles.editButtonText}>Upload</Text>
-            </TouchableOpacity>
-          </View>
+                    {/* profile details container */}
+                    <View style={styles.nameRoleContainer}>
+                        <Text style={[styles.name, { color: Colors.light.textPrimary }]}>{fullName}</Text>
+                        <Text style={[styles.role, { color: Colors.light.textSecondary }]}>{email}</Text>
+                    </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Full Name (e.g., Dr. John Doe)"
-            value={fullName}
-            onChangeText={setFullName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Email Address"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
-          <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleSubmit}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitButtonText}>Submit</Text>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
-  );
-};
+                    {/* input fields container */}
+                    <View style={styles.inputFieldsContainer}>
+                        <CustomInput
+                            label='Full Name' placeholder='Dr. John Doe'
+                            icon={<Ionicons name={"person-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                            value={fullName} onChangeText={setFullName}
+                        />
+                        <CustomInput
+                            label='Your Email' placeholder='zerodegreecoder@gmail.com'
+                            icon={<Ionicons name={"mail-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                            value={email} onChangeText={setEmail}
+                        />
+                        <CustomInput
+                            label='Phone Number' placeholder='+93123135'
+                            icon={<Feather name={"phone"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                            value={phoneNumber} onChangeText={setPhoneNumber}
+                        />
+                    </View>
 
-export default DoctorRegistrationForm;
+                    {/* submit button */}
+                    <TouchableOpacity style={[styles.logoutButton, { borderColor: Colors.light.orange }]} onPress={handleSubmit} disabled={uploading}>
+                        {uploading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={[styles.logoutText, { color: Colors.light.orange }]}>Submit</Text>
+                        )}
+                    </TouchableOpacity>
+                </ScrollView>
+            </SafeAreaView>
+        </KeyboardAvoidingView>
+    )
+}
+
+export default ProfileScreen
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9f9f9', justifyContent: 'center', paddingTop: 20 },
-  scrollContainer: { alignItems: 'center', paddingBottom: 20, paddingHorizontal: 20 },
-  profileContainer: { alignItems: 'center', marginBottom: 30 },
-  profileImage: { width: 120, height: 120, borderRadius: 60, borderWidth: 2, borderColor: '#6200ee' },
-  placeholderImage: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' },
-  placeholderText: { color: '#aaa', fontSize: 16 },
-  editButton: { marginTop: 10, backgroundColor: '#6200ee', paddingVertical: 5, paddingHorizontal: 15, borderRadius: 20 },
-  editButtonText: { color: '#fff', fontSize: 14 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingHorizontal: 20 },
-    backArrow: { width: 30, height: 30 },
-    textAdd: { fontSize: 20, fontWeight: 'bold' },
-
-  input: { width: '100%', height: 50, borderWidth: 1, borderColor: '#ccc', borderRadius: 5, marginBottom: 20, fontSize: 16, paddingHorizontal: 10 },
-  submitButton: { backgroundColor: '#6200ee', paddingVertical: 15, borderRadius: 5, alignItems: 'center', width: '100%' },
-  submitButtonText: { color: '#fff', fontSize: 16 },
-});
+    container: {
+        flex: 1,
+        padding: spacing.md
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingHorizontal: 20
+    },
+    backArrow: {
+        width: 20,
+        height: 20,
+        tintColor: Colors.light.textPrimary // Ensure the back arrow is visible
+    },
+    textAdd: {
+        fontSize: 20,
+        fontWeight: 'bold'
+    },
+    profileImageContainer: {
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: spacing.md
+    },
+    profileImage: {
+        height: 140,
+        width: 140,
+        borderRadius: 70,
+        borderWidth: 2,
+        borderColor: '#6200ee'
+    },
+    editIconContainer: {
+        height: 35,
+        width: 35,
+        borderRadius: 15,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: -22,
+        marginLeft: 45
+    },
+    nameRoleContainer: {
+        alignItems: "center",
+        marginVertical: spacing.sm
+    },
+    name: {
+        fontFamily: fontFamily.semiBold,
+        fontSize: fontSize.lg,
+    },
+    role: {
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+    },
+    inputFieldsContainer: {
+        marginVertical: spacing.md
+    },
+    icon: {
+        marginHorizontal: spacing.sm
+    },
+    logoutButton: {
+        borderWidth: 1,
+        padding: spacing.md,
+        backgroundColor: '#e0ffcd',
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 10,
+        marginVertical: spacing.md
+    },
+    logoutText: {
+        fontSize: fontSize.lg,
+        fontFamily: fontFamily.bold,
+    }
+})
