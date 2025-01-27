@@ -90,7 +90,7 @@ export default function Example() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ecf2f9', }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ecf2f9', paddingTop: 20 }}>
       <View style={styles.header}>
         <View style={styles.headerAction}>
           <TouchableOpacity

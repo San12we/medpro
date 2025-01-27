@@ -79,7 +79,7 @@ const ProfileScreen = () => {
 
     return (
         <KeyboardAvoidingView style={{ flex: 1, backgroundColor: Colors.light.background }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { paddingTop: 20 }]}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={goback}>
                         <Image source={backArrowImg} style={[styles.backArrow, { tintColor: Colors.light.textPrimary }]} />

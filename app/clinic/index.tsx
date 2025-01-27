@@ -13,6 +13,8 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Switch,
+  Pressable,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -29,21 +31,45 @@ import CustomInput from '../../components/CustomInput';
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { backArrowImg } from '@/theme/Images';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+
+const servicesList = [
+  { label: 'General medical care', value: 'General medical care' },
+  { label: 'Preventive health screenings', value: 'Preventive health screenings' },
+  { label: 'Vaccinations and immunizations', value: 'Vaccinations and immunizations' },
+  { label: 'Chronic disease management', value: 'Chronic disease management' },
+  { label: 'Women\'s health services', value: 'Women\'s health services' },
+  { label: 'Pediatric care', value: 'Pediatric care' },
+  { label: 'Minor surgical procedures', value: 'Minor surgical procedures' },
+  { label: 'Physical therapy and rehabilitation', value: 'Physical therapy and rehabilitation' },
+  { label: 'Mental health counseling', value: 'Mental health counseling' },
+  { label: 'Nutritional and lifestyle counseling', value: 'Nutritional and lifestyle counseling' },
+  { label: 'Diagnostic and laboratory services', value: 'Diagnostic and laboratory services' },
+  { label: 'Specialist referrals and consultations', value: 'Specialist referrals and consultations' },
+];
+
+const _color = "#ececec";
+const _borderRadius = 16;
+const _damping = 14;
+const _entering = FadeInDown.springify().damping(_damping);
+const _exiting = FadeOut.springify().damping(_damping);
+const _layout = LinearTransition.springify().damping(_damping);
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const PracticeInformation = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [practiceName, setPracticeName] = useState('');
   const [practiceLocation, setPracticeLocation] = useState('');
   const [workingDays, setWorkingDays] = useState([
-    { day: 'Mon', active: false },
-    { day: 'Tue', active: false },
-    { day: 'Wed', active: false },
-    { day: 'Thu', active: false },
-    { day: 'Fri', active: false },
-    { day: 'Sat', active: false },
-    { day: 'Sun', active: false },
+    { day: 'Mon', active: false, startTime: '', endTime: '' },
+    { day: 'Tue', active: false, startTime: '', endTime: '' },
+    { day: 'Wed', active: false, startTime: '', endTime: '' },
+    { day: 'Thu', active: false, startTime: '', endTime: '' },
+    { day: 'Fri', active: false, startTime: '', endTime: '' },
+    { day: 'Sat', active: false, startTime: '', endTime: '' },
+    { day: 'Sun', active: false, startTime: '', endTime: '' },
   ]);
-  const [workingHours, setWorkingHours] = useState({ startTime: '', endTime: '' });
   const [experience, setExperience] = useState([]);
   const [institution, setInstitution] = useState('');
   const [year, setYear] = useState('');
@@ -52,12 +78,17 @@ const PracticeInformation = () => {
   const [showExperienceInput, setShowExperienceInput] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedInsuranceProviders, setSelectedInsuranceProviders] = useState([]);
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [website, setWebsite] = useState('');
+  const [selectedServices, setSelectedServices] = useState([]);
   const { insuranceProviders } = useInsurance();
   const router = useRouter();
   const [userId, setUserId] = useState('');
   const { missingFields } = useLocalSearchParams();
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [currentDayIndex, setCurrentDayIndex] = useState(null);
   const navigation = useNavigation();
   const { colors } = useTheme();
 
@@ -95,15 +126,14 @@ const PracticeInformation = () => {
         if (field === 'practiceName') setPracticeName('');
         if (field === 'practiceLocation') setPracticeLocation('');
         if (field === 'workingDays') setWorkingDays([
-          { day: 'Mon', active: false },
-          { day: 'Tue', active: false },
-          { day: 'Wed', active: false },
-          { day: 'Thu', active: false },
-          { day: 'Fri', active: false },
-          { day: 'Sat', active: false },
-          { day: 'Sun', active: false },
+          { day: 'Mon', active: false, startTime: '', endTime: '' },
+          { day: 'Tue', active: false, startTime: '', endTime: '' },
+          { day: 'Wed', active: false, startTime: '', endTime: '' },
+          { day: 'Thu', active: false, startTime: '', endTime: '' },
+          { day: 'Fri', active: false, startTime: '', endTime: '' },
+          { day: 'Sat', active: false, startTime: '', endTime: '' },
+          { day: 'Sun', active: false, startTime: '', endTime: '' },
         ]);
-        if (field === 'workingHours') setWorkingHours({ startTime: '', endTime: '' });
         if (field === 'selectedInsuranceProviders') setSelectedInsuranceProviders([]);
       });
     }
@@ -188,14 +218,18 @@ const PracticeInformation = () => {
   };
 
   const handleSubmit = async () => {
-    if (!practiceName || !practiceLocation) {
+    if (!practiceName || !practiceLocation || !phone || !email || !licenseNumber) {
       Alert.alert('Please fill out all mandatory fields.');
       return;
     }
 
-    const selectedDays = workingDays.filter((day) => day.active).map((day) => day.day);
+    const selectedDays = workingDays.filter((day) => day.active).map((day) => ({
+      day: day.day,
+      startTime: day.startTime,
+      endTime: day.endTime,
+    }));
 
-    if (selectedDays.length === 0 || !workingHours.startTime || !workingHours.endTime) {
+    if (selectedDays.length === 0) {
       Alert.alert('Please select working days and specify working hours.');
       return;
     }
@@ -221,9 +255,10 @@ const PracticeInformation = () => {
         practiceLocation,
         profileImage: profileImageUrl,
         workingDays: selectedDays,
-        workingHours,
         experience,
         insuranceProviders: selectedInsuranceProviders,
+        contactInfo: { phone, email, website },
+        services: selectedServices,
       };
 
       const response = await fetch('https://medplus-health.onrender.com/api/professionals/practice', {
@@ -239,7 +274,7 @@ const PracticeInformation = () => {
       if (!response.ok) throw new Error('Failed to update practice information');
 
       Alert.alert('Practice information updated successfully.');
-      router.push('/profile/Verification');
+     
     } catch (error) {
       console.error('Failed to update practice information:', error);
       Alert.alert('Failed to update practice information');
@@ -254,7 +289,9 @@ const PracticeInformation = () => {
       const hours = selectedTime.getHours();
       const minutes = selectedTime.getMinutes();
       const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-      setWorkingHours({ ...workingHours, startTime: formattedTime });
+      const updatedDays = [...workingDays];
+      updatedDays[currentDayIndex].startTime = formattedTime;
+      setWorkingDays(updatedDays);
     }
   };
 
@@ -264,7 +301,9 @@ const PracticeInformation = () => {
       const hours = selectedTime.getHours();
       const minutes = selectedTime.getMinutes();
       const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-      setWorkingHours({ ...workingHours, endTime: formattedTime });
+      const updatedDays = [...workingDays];
+      updatedDays[currentDayIndex].endTime = formattedTime;
+      setWorkingDays(updatedDays);
     }
   };
 
@@ -281,13 +320,66 @@ const PracticeInformation = () => {
     </TouchableOpacity>
   );
 
+  const renderServiceCard = ({ item }) => (
+    !selectedServices.includes(item.value) && (
+      <TouchableOpacity
+        style={[
+          styles.serviceCard,
+          selectedServices.includes(item.value) && styles.activeServiceCard,
+        ]}
+        onPress={() => toggleService(item.value)}
+      >
+        <Text style={styles.serviceCardText}>{item.label}</Text>
+      </TouchableOpacity>
+    )
+  );
+
+  const toggleService = (service) => {
+    setSelectedServices((prev) =>
+      prev.includes(service)
+        ? prev.filter((s) => s !== service)
+        : [...prev, service]
+    );
+  };
+
   const goBack = () => {
     navigation.goBack();
   };
 
+  const renderSlot = ({ item }) => (
+    <View style={styles.slotCard}>
+      <Text style={styles.slotText}>
+        {item.startTime} - {item.endTime} {item.isAvailable ? "(Available)" : "(Not Available)"}
+      </Text>
+    </View>
+  );
+
+  const renderPreview = () => {
+    if (!workingDays.some((day) => day.active)) return null;
+
+    return (
+      <View style={styles.previewContainer}>
+        {workingDays.map((day, index) => (
+          day.active && (
+            <View key={index} style={styles.dayPreview}>
+              <Text style={styles.previewDay}>{day.day}</Text>
+              <FlatList
+                data={[{ startTime: day.startTime, endTime: day.endTime }]}
+                renderItem={renderSlot}
+                horizontal
+                keyExtractor={(item, index) => `preview-${day.day}-${index}-${item.startTime}-${item.endTime}`}
+                contentContainerStyle={styles.slotList}
+              />
+            </View>
+          )
+        ))}
+      </View>
+    );
+  };
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { paddingTop: 20 }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={goBack}>
             <Image source={backArrowImg} style={styles.backArrow} />
@@ -318,6 +410,37 @@ const PracticeInformation = () => {
             icon={<Ionicons name={"location-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
             value={practiceLocation} onChangeText={setPracticeLocation}
           />
+          <CustomInput
+            label='Phone (Required)' placeholder='Enter phone number'
+            icon={<Feather name={"phone"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+            value={phone} onChangeText={setPhone}
+          />
+          <CustomInput
+            label='Email (Required)' placeholder='Enter email'
+            icon={<Feather name={"mail"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+            value={email} onChangeText={setEmail}
+          />
+          <CustomInput
+            label='Website' placeholder='Enter website'
+            icon={<Feather name={"globe"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+            value={website} onChangeText={setWebsite}
+          />
+          <Text style={styles.sectionHeader}>Services</Text>
+          <FlatList
+            data={servicesList}
+            renderItem={renderServiceCard}
+            keyExtractor={(item) => item.value}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.servicesContainer}
+          />
+          <View style={styles.selectedServicesContainer}>
+            {selectedServices.map((service, index) => (
+              <View key={index} style={styles.serviceCard}>
+                <Text style={styles.serviceCardText}>{service}</Text>
+              </View>
+            ))}
+          </View>
 
           <Text style={styles.sectionHeader}>Supported Insurance Providers</Text>
           <View style={styles.insuranceProvidersContainer}>
@@ -343,25 +466,29 @@ const PracticeInformation = () => {
             ))}
           </View>
 
-          <Text style={styles.sectionHeader}>Working Hours</Text>
-          <View style={styles.hoursContainer}>
-            <TouchableOpacity onPress={() => setShowStartTimePicker(true)}>
-              <TextInput
-                style={styles.input}
-                placeholder="Start Time (e.g., 9:00 AM)"
-                value={workingHours.startTime}
-                editable={false}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowEndTimePicker(true)}>
-              <TextInput
-                style={styles.input}
-                placeholder="End Time (e.g., 5:00 PM)"
-                value={workingHours.endTime}
-                editable={false}
-              />
-            </TouchableOpacity>
-          </View>
+          {workingDays.map((day, index) => (
+            day.active && (
+              <View key={index} style={styles.hoursContainer}>
+                <TouchableOpacity onPress={() => { setShowStartTimePicker(true); setCurrentDayIndex(index); }}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Start Time (e.g., 9:00 AM)"
+                    value={day.startTime}
+                    editable={false}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { setShowEndTimePicker(true); setCurrentDayIndex(index); }}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="End Time (e.g., 5:00 PM)"
+                    value={day.endTime}
+                    editable={false}
+                  />
+                </TouchableOpacity>
+              </View>
+            )
+          ))}
+
           {showStartTimePicker && (
             <DateTimePicker
               value={new Date()}
@@ -378,6 +505,8 @@ const PracticeInformation = () => {
               onChange={handleEndTimeChange}
             />
           )}
+
+          {renderPreview()}
 
           <Text style={styles.sectionHeader}>Experience (Optional)</Text>
           <TouchableOpacity style={styles.addButton} onPress={() => setShowExperienceInput(true)}>
@@ -597,6 +726,39 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginBottom: 4,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  switchLabel: {
+    fontSize: fontSize.md,
+    color: Colors.light.textPrimary,
+  },
+  selectedServicesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: spacing.md,
+  },
+  serviceCard: {
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  activeServiceCard: {
+    backgroundColor: Colors.light.orange,
+    borderColor: Colors.light.orange,
+  },
+  serviceCardText: {
+    color: Colors.light.textPrimary,
+  },
+  servicesContainer: {
+    marginBottom: spacing.md,
   },
 });
 
