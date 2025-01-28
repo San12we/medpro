@@ -14,7 +14,7 @@ export const Colors = {
     textSecondary: '#7F7F7F',
     iconSecondary: '#891180',
     iconWhite: '#FFFFFF',
-    orange: '#FFA500',
+    orange: '#a0eecc',
   },
   dark: {
     text: '#ECEDEE',

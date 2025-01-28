@@ -19,9 +19,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import useInsurance from '../../hooks/useInsurance';
-import * as FileSystem from 'expo-file-system';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firebase } from '../../firebase/config';
+
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { fontSize, iconSize, spacing } from '../../constants/dimensions';
@@ -37,8 +35,44 @@ import { pickImage, uploadImage } from '../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser } from '../../app/(redux)/userSlice';
 import Schedule from '../../components/Schedule';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import FeatherIcon from '@expo/vector-icons/Feather';
 
-const servicesList = [
+type WorkingDaySlot = {
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+};
+
+type WorkingDays = {
+  [key: string]: WorkingDaySlot[];
+};
+
+type Experience = {
+  institution: string;
+  year: string;
+  roles: string;
+  notableAchievement: string;
+};
+
+type InsuranceProvider = {
+  _id: string;
+  name: string;
+  icon: string;
+};
+
+type Service = {
+  label: string;
+  value: string;
+};
+
+type PracticeInformationProps = {
+  navigation: NativeStackNavigationProp<any>;
+  route: RouteProp<any>;
+};
+
+const servicesList: Service[] = [
   { label: 'General medical care', value: 'General medical care' },
   { label: 'Preventive health screenings', value: 'Preventive health screenings' },
   { label: 'Vaccinations and immunizations', value: 'Vaccinations and immunizations' },
@@ -53,6 +87,7 @@ const servicesList = [
   { label: 'Specialist referrals and consultations', value: 'Specialist referrals and consultations' },
 ];
 
+const _startHour = 9; // Define the start hour
 const _color = "#ececec";
 const _borderRadius = 16;
 const _damping = 14;
@@ -62,13 +97,17 @@ const _layout = LinearTransition.springify().damping(_damping);
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const Hourblock = ({ block }) => (
+const Hourblock: React.FC<{ block: string }> = ({ block }) => (
   <View style={styles.hourBlock}>
     <Text>{block}</Text>
   </View>
 );
 
-const DayBlock = ({ day, workingDays, setWorkingDays }) => {
+const DayBlock: React.FC<{
+  day: string;
+  workingDays: WorkingDays;
+  setWorkingDays: React.Dispatch<React.SetStateAction<WorkingDays>>;
+}> = ({ day, workingDays, setWorkingDays }) => {
   const slots = workingDays[day] || [];
   const [recurrence, setRecurrence] = useState('None');
 
@@ -135,7 +174,11 @@ const DayBlock = ({ day, workingDays, setWorkingDays }) => {
   );
 };
 
-const Day = ({ day, workingDays, setWorkingDays }) => {
+const Day: React.FC<{
+  day: string;
+  workingDays: WorkingDays;
+  setWorkingDays: React.Dispatch<React.SetStateAction<WorkingDays>>;
+}> = ({ day, workingDays, setWorkingDays }) => {
   const [isOn, setIsOn] = useState(false);
 
   useEffect(() => {
@@ -160,41 +203,41 @@ const Day = ({ day, workingDays, setWorkingDays }) => {
   );
 };
 
-const PracticeInformation = () => {
+const PracticeInformation: React.FC<PracticeInformationProps> = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth?.user);
+  const user = useSelector((state: { auth: { user: any } }) => state.auth?.user);
+  const userId = user?.userId;
+  const router = useRouter();
+
   const [profileImage, setProfileImage] = useState(user?.profileImage || '');
   const [practiceName, setPracticeName] = useState('');
   const [practiceLocation, setPracticeLocation] = useState('');
-  const [workingDays, setWorkingDays] = useState({
-    Mon: {},
-    Tue: {},
-    Wed: {},
-    Thu: {},
-    Fri: {},
-    Sat: {},
-    Sun: {},
+  const [workingDays, setWorkingDays] = useState<WorkingDays>({
+    Mon: [],
+    Tue: [],
+    Wed: [],
+    Thu: [],
+    Fri: [],
+    Sat: [],
+    Sun: [],
   });
-  const [experience, setExperience] = useState([]);
+  const [experience, setExperience] = useState<Experience[]>([]);
   const [institution, setInstitution] = useState('');
   const [year, setYear] = useState('');
   const [roles, setRoles] = useState('');
   const [notableAchievement, setNotableAchievement] = useState('');
   const [showExperienceInput, setShowExperienceInput] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedInsuranceProviders, setSelectedInsuranceProviders] = useState([]);
+  const [selectedInsuranceProviders, setSelectedInsuranceProviders] = useState<string[]>([]);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
-  const [selectedServices, setSelectedServices] = useState([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const { insuranceProviders } = useInsurance();
-  const router = useRouter();
-  const [userId, setUserId] = useState('');
   const { missingFields } = useLocalSearchParams();
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [currentDayIndex, setCurrentDayIndex] = useState(null);
-  const navigation = useNavigation();
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -203,24 +246,6 @@ const PracticeInformation = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    const loadUserId = async () => {
-      try {
-        const storedUserData = await AsyncStorage.getItem('userData');
-        if (storedUserData) {
-          const userData = JSON.parse(storedUserData);
-          setUserId(userData.userId);
-        }
-      } catch (error) {
-        console.error('Failed to load user data', error);
-      }
-    };
-
-    loadUserId();
-  }, []);
-
- 
-
   const handlePickImage = async () => {
     const imageUri = await pickImage();
     if (imageUri) {
@@ -228,7 +253,6 @@ const PracticeInformation = () => {
       try {
         const profileImageUrl = await uploadImage(imageUri);
         if (profileImageUrl) {
-          console.log('Profile image URL:', profileImageUrl);
           setProfileImage(profileImageUrl);
         }
       } catch (error) {
@@ -237,32 +261,6 @@ const PracticeInformation = () => {
         setUploading(false);
       }
     }
-  };
-
-  const toggleInsuranceProvider = (providerId) => {
-    setSelectedInsuranceProviders((prev) =>
-      prev.includes(providerId)
-        ? prev.filter((id) => id !== providerId)
-        : [...prev, providerId]
-    );
-  };
-
-  const addExperience = () => {
-    if (!institution || !year || !roles || !notableAchievement) {
-      Alert.alert('Please fill out all fields for the experience.');
-      return;
-    }
-
-    setExperience((prev) => [
-      ...prev,
-      { institution, year, roles, notableAchievement },
-    ]);
-
-    setInstitution('');
-    setYear('');
-    setRoles('');
-    setNotableAchievement('');
-    setShowExperienceInput(false);
   };
 
   const handleUploadImage = async () => {
@@ -302,11 +300,19 @@ const PracticeInformation = () => {
 
     setUploading(true);
     try {
+      let profileImageUrl = profileImage;
+      if (!profileImageUrl) {
+        profileImageUrl = await handleUploadImage();
+        if (!profileImageUrl) {
+          throw new Error('Failed to upload image');
+        }
+      }
+
       const payload = {
         userId,
         practiceName,
         practiceLocation,
-        profileImage,
+        profileImage: profileImageUrl,
         workingDays: selectedDays,
         experience,
         insuranceProviders: selectedInsuranceProviders,
@@ -336,31 +342,39 @@ const PracticeInformation = () => {
     }
   };
 
-  const handleStartTimeChange = (event, selectedTime) => {
+  const handleStartTimeChange = (event: any, selectedTime: Date | undefined) => {
     setShowStartTimePicker(false);
     if (selectedTime) {
       const hours = selectedTime.getHours();
       const minutes = selectedTime.getMinutes();
       const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-      const updatedDays = { ...workingDays };
-      updatedDays[currentDayIndex].startTime = formattedTime;
-      setWorkingDays(updatedDays);
+      if (currentDayIndex !== null) {
+        const updatedDays = { ...workingDays };
+        if (updatedDays[currentDayIndex] && updatedDays[currentDayIndex][0]) {
+          updatedDays[currentDayIndex][0].startTime = formattedTime;
+        }
+        setWorkingDays(updatedDays);
+      }
     }
   };
 
-  const handleEndTimeChange = (event, selectedTime) => {
+  const handleEndTimeChange = (event: any, selectedTime: Date | undefined) => {
     setShowEndTimePicker(false);
     if (selectedTime) {
       const hours = selectedTime.getHours();
       const minutes = selectedTime.getMinutes();
       const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-      const updatedDays = { ...workingDays };
-      updatedDays[currentDayIndex].endTime = formattedTime;
-      setWorkingDays(updatedDays);
+      if (currentDayIndex !== null) {
+        const updatedDays = { ...workingDays };
+        if (updatedDays[currentDayIndex] && updatedDays[currentDayIndex][0]) {
+          updatedDays[currentDayIndex][0].endTime = formattedTime;
+        }
+        setWorkingDays(updatedDays);
+      }
     }
   };
 
-  const renderInsuranceProvider = ({ item }) => (
+  const renderInsuranceProvider = ({ item }: { item: InsuranceProvider }) => (
     <TouchableOpacity
       style={[
         styles.insuranceProviderCard,
@@ -373,7 +387,7 @@ const PracticeInformation = () => {
     </TouchableOpacity>
   );
 
-  const renderServiceCard = ({ item }) => (
+  const renderServiceCard = ({ item }: { item: Service }) => (
     !selectedServices.includes(item.value) && (
       <TouchableOpacity
         style={[
@@ -387,7 +401,7 @@ const PracticeInformation = () => {
     )
   );
 
-  const toggleService = (service) => {
+  const toggleService = (service: string) => {
     setSelectedServices((prev) =>
       prev.includes(service)
         ? prev.filter((s) => s !== service)
@@ -396,7 +410,7 @@ const PracticeInformation = () => {
   };
 
   const goBack = () => {
-    navigation.goBack();
+    router.push('/(tabs)/profile'); // Replace '/previousRoute' with the actual route you want to navigate to
   };
 
  
@@ -406,7 +420,7 @@ const PracticeInformation = () => {
       <SafeAreaView style={[styles.container, { paddingTop: 20 }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={goBack}>
-            <Image source={backArrowImg} style={styles.backArrow} />
+            <FeatherIcon color="#000" name="arrow-left" size={24} />
           </TouchableOpacity>
           <Text style={styles.textAdd}>Practice Information</Text>
         </View>
@@ -556,7 +570,7 @@ const PracticeInformation = () => {
             {uploading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={[styles.submitButtonText, { color: Colors.light.orange }]}>Submit</Text>
+              <Text style={[styles.submitButtonText, { color: '#000' }]}>Submit</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

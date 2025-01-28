@@ -8,6 +8,7 @@ import { fontFamily } from '../../constants/fontFamily'
 import CustomInput from '../../components/CustomInput'
 import Feather from "react-native-vector-icons/Feather"
 import Ionicons from "react-native-vector-icons/Ionicons"
+import FeatherIcon from '@expo/vector-icons/Feather';
 
 import { useTheme } from '@react-navigation/native'
 import { ProfileImg, backArrowImg } from '@/theme/Images'
@@ -82,7 +83,7 @@ const ProfileScreen = () => {
             <SafeAreaView style={[styles.container, { paddingTop: 20 }]}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={goback}>
-                        <Image source={backArrowImg} style={[styles.backArrow, { tintColor: Colors.light.textPrimary }]} />
+                        <FeatherIcon color="#000" name="arrow-left" size={24} />
                     </TouchableOpacity>
                     <Text style={styles.textAdd}>Personal Information</Text>
                 </View>

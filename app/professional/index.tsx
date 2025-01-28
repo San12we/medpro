@@ -3,7 +3,6 @@ import { View, Text, TextInput, StyleSheet, Alert, ScrollView, Image, TouchableO
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { backArrowImg } from '../../theme/Images';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
 import { fontSize, iconSize, spacing } from '../../constants/dimensions';
@@ -12,6 +11,7 @@ import { fontFamily } from '../../constants/fontFamily';
 import CustomInput from '../../components/CustomInput';
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import FeatherIcon from '@expo/vector-icons/Feather';
 
 const ProfessionalDetailsScreen = () => {
   const router = useRouter();
@@ -106,7 +106,7 @@ const ProfessionalDetailsScreen = () => {
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: 2 * spacing.xl }}>
           <View style={styles.header}>
             <TouchableOpacity onPress={goback}>
-              <Image source={backArrowImg} style={styles.backArrow} />
+              <FeatherIcon color="#000" name="arrow-left" size={24} />
             </TouchableOpacity>
             <Text style={styles.textAdd}>Professional Information</Text>
           </View>
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     tintColor: Colors.light.textPrimary // Ensure the back arrow is visible
-},
+  },
   textAdd: {
     fontSize: 20,
     fontWeight: 'bold',
