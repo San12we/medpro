@@ -224,7 +224,18 @@ const PracticeInformation = () => {
   const handlePickImage = async () => {
     const imageUri = await pickImage();
     if (imageUri) {
-      setProfileImage(imageUri);
+      setUploading(true);
+      try {
+        const profileImageUrl = await uploadImage(imageUri);
+        if (profileImageUrl) {
+          console.log('Profile image URL:', profileImageUrl);
+          setProfileImage(profileImageUrl);
+        }
+      } catch (error) {
+        console.error('Image upload failed:', error);
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -291,19 +302,11 @@ const PracticeInformation = () => {
 
     setUploading(true);
     try {
-      let profileImageUrl = profileImage;
-      if (!profileImageUrl) {
-        profileImageUrl = await handleUploadImage();
-        if (!profileImageUrl) {
-          throw new Error('Failed to upload image');
-        }
-      }
-
       const payload = {
         userId,
         practiceName,
         practiceLocation,
-        profileImage: profileImageUrl,
+        profileImage,
         workingDays: selectedDays,
         experience,
         insuranceProviders: selectedInsuranceProviders,

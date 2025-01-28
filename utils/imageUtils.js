@@ -37,6 +37,7 @@ export const uploadImage = async (imageUri) => {
     blob.close();
 
     const url = await ref.getDownloadURL();
+    console.log('Uploaded image URL:', url);
     await AsyncStorage.setItem('profileImage', url);
 
     Alert.alert('Profile image uploaded successfully');
