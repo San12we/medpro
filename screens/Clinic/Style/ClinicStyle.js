@@ -1,11 +1,16 @@
 import { StyleSheet } from 'react-native';
-import { fontSize, iconSize, spacing } from '../../../constants/dimensions';
+import { fontSize, iconSize, spacing as globalSpacing } from '../../../constants/dimensions';
 import { Colors } from '../../../constants/Colors';
 
+const _color = "#ececec";
+const _borderRadius = 16;
+const spacing = globalSpacing.md;
+
 const styles = StyleSheet.create({
+  
   container: {
     flex: 1,
-    padding: spacing.md,
+    padding: spacing,
   },
   header: {
     flexDirection: 'row',
@@ -25,7 +30,7 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   profileImage: {
     width: 100,
@@ -44,8 +49,8 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   editButton: {
-    marginTop: spacing.sm,
-    padding: spacing.sm,
+    marginTop: spacing / 2,
+    padding: spacing / 2,
     backgroundColor: Colors.light.orange,
     borderRadius: 8,
   },
@@ -55,21 +60,21 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    marginBottom: spacing.sm,
+    marginBottom: spacing / 2,
     color: Colors.light.textPrimary,
   },
   dayCardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   dayCard: {
-    padding: spacing.sm,
+    padding: spacing / 2,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    marginRight: spacing.sm,
-    marginBottom: spacing.sm,
+    marginRight: spacing / 2,
+    marginBottom: spacing / 2,
   },
   activeDayCard: {
     backgroundColor: Colors.light.orange,
@@ -81,11 +86,11 @@ const styles = StyleSheet.create({
   hoursContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   addButton: {
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   addButtonText: {
     fontSize: fontSize.md,
@@ -93,14 +98,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   experienceInputContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   experienceList: {
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   experienceItem: {
     backgroundColor: '#fff',
-    padding: spacing.md,
+    padding: spacing,
   },
   experienceInstitution: {
     fontSize: 16,
@@ -159,7 +164,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   switchLabel: {
     fontSize: fontSize.md,
@@ -168,15 +173,15 @@ const styles = StyleSheet.create({
   selectedServicesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: spacing.md,
+    marginBottom: spacing,
   },
   serviceCard: {
-    padding: spacing.sm,
+    padding: spacing / 2,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    marginRight: spacing.sm,
-    marginBottom: spacing.sm,
+    marginRight: spacing / 2,
+    marginBottom: spacing / 2,
   },
   activeServiceCard: {
     backgroundColor: Colors.light.orange,
@@ -186,7 +191,151 @@ const styles = StyleSheet.create({
     color: Colors.light.textPrimary,
   },
   servicesContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing,
+  },
+  dayContainer: {
+    borderWidth: 1,
+    borderColor: _color,
+    padding: spacing,
+    borderRadius: _borderRadius,
+    gap: spacing,
+  },
+
+  recurrenceOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: 'black',
+  },
+    recurrenceDropdown: {
+    position: 'absolute',
+    top: 32,
+    right: 16,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  dayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  daySwitch: {
+    transform: [{ scale: 0.7 }],
+  },
+  dayBlockContainer: {
+    gap: spacing,
+  },
+  dayBlockRow: {
+    flexDirection: 'row',
+    gap: spacing,
+    alignItems: 'center',
+  },
+  hourBlock: {
+    borderWidth: 1,
+    borderColor: _color,
+    borderRadius: _borderRadius - spacing / 2,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing / 4,
+  },
+  removeButton: {
+    backgroundColor: _color,
+    height: 30,
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: _borderRadius - spacing / 2,
+  },
+  addHourButton: {
+    flexDirection: 'row',
+    gap: spacing / 2,
+    padding: spacing,
+    borderRadius: _borderRadius - spacing / 2,
+    backgroundColor: _color,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing / 2,
+  },
+  addHourIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'blue',
+  },
+  previewContainer: {
+    marginTop: spacing * 2,
+  },
+  previewTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: spacing,
+  },
+  dayPreview: {
+    marginBottom: spacing,
+        backgroundColor: '#ecf2f9'
+  },
+  previewDay: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginBottom: spacing / 2,
+
+  },
+  slotList: {
+    gap: spacing,
+    
+  },
+  slotCard: {
+    backgroundColor: '#ffcab0',
+    padding: spacing,
+    borderRadius: _borderRadius - spacing / 2,
+    marginRight: spacing,
+  },
+  slotText: {
+    fontSize: 14,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  recurrenceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing,
+  },
+  recurrenceButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  recurrenceButtonText: {
+    fontSize: 16,
+    color: 'black',
+  },
+  selectedRecurrence: {
+    marginHorizontal: spacing / 2,
+    padding: spacing / 2,
+    borderRadius: _borderRadius - spacing / 2,
+    backgroundColor: 'blue',
+    color: 'white',
+  },
+  toggleButton: {
+    backgroundColor: _color,
+    height: 30,
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: _borderRadius - spacing / 2,
   },
 });
 

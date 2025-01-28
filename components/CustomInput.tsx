@@ -13,9 +13,11 @@ type CustomInputProps = {
     label: string,
     icon?: React.ReactElement,
     placeholder: string,
-    type?: string
+    type?: string,
+    value: string,
+    onChangeText: (text: string) => void
 }
-const CustomInput: React.FC<CustomInputProps> = ({ label, icon, placeholder, type, ...rest }) => {
+const CustomInput: React.FC<CustomInputProps> = ({ label, icon, placeholder, type, value, onChangeText, ...rest }) => {
     const [secureTextEntery, setSecureTextEntery] = useState(true);
     const { colors } = useTheme();
 
@@ -33,7 +35,8 @@ const CustomInput: React.FC<CustomInputProps> = ({ label, icon, placeholder, typ
                     placeholder={placeholder}
                     placeholderTextColor={Colors.SECONDARY}
                     secureTextEntry={type === "password" && secureTextEntery}
-
+                    value={value}
+                    onChangeText={onChangeText}
                 />
                 {
                     type === "password" && (
