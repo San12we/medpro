@@ -308,8 +308,8 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         body: JSON.stringify(payload),
       });
 
-      const responseBody = await response.json();
-
+      console.log(response)
+      
       if (!response.ok) throw new Error('Failed to update practice information');
 
       Alert.alert('Practice information updated successfully.');
