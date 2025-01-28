@@ -278,26 +278,6 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
   };
 
   const handleSubmit = async () => {
-    if (!practiceName || !practiceLocation || !phone || !email) {
-      Alert.alert('Please fill out all mandatory fields.');
-      return;
-    }
-
-    const selectedDays = Object.keys(workingDays).filter((day) => workingDays[day].startTime && workingDays[day].endTime).map((day) => ({
-      day,
-      slots: [workingDays[day]],
-    }));
-
-    if (selectedDays.length === 0) {
-      Alert.alert('Please select working days and specify working hours.');
-      return;
-    }
-
-    if (selectedInsuranceProviders.length === 0) {
-      Alert.alert('Please select at least one insurance provider.');
-      return;
-    }
-
     setUploading(true);
     try {
       let profileImageUrl = profileImage;
@@ -313,7 +293,7 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         practiceName,
         practiceLocation,
         profileImage: profileImageUrl,
-        workingDays: selectedDays,
+        workingDays,
         experience,
         insuranceProviders: selectedInsuranceProviders,
         contactInfo: { phone, email, website },
@@ -406,14 +386,6 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
       prev.includes(service)
         ? prev.filter((s) => s !== service)
         : [...prev, service]
-    );
-  };
-
-  const toggleInsuranceProvider = (providerId: string) => {
-    setSelectedInsuranceProviders((prev) =>
-      prev.includes(providerId)
-        ? prev.filter((id) => id !== providerId)
-        : [...prev, providerId]
     );
   };
 
