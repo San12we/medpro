@@ -8,13 +8,13 @@ import {
   ScrollView,
   TouchableOpacity, TextInput
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const spacing = 10;
-const _color = "#ececec";
+const _color = "#f9ecec";
 const _borderRadius = 16;
 const _damping = 14;
 const _entering = FadeInDown.springify().damping(_damping);

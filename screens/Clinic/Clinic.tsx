@@ -269,8 +269,14 @@ const PracticeInformation = () => {
   };
 
   const handleSubmit = async () => {
-    if (!practiceName || !practiceLocation || !phone || !email) {
-      Alert.alert('Please fill out all mandatory fields.');
+    const missingFields = [];
+    if (!practiceName) missingFields.push('Practice Name');
+    if (!practiceLocation) missingFields.push('Practice Location');
+    if (!phone) missingFields.push('Phone');
+    if (!email) missingFields.push('Email');
+
+    if (missingFields.length > 0) {
+      Alert.alert('Please fill out all mandatory fields:', missingFields.join(', '));
       return;
     }
 
