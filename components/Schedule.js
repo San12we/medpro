@@ -7,12 +7,10 @@ import {
   Switch,
   ScrollView,
   TouchableOpacity, TextInput
-
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
 
 const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const spacing = 10;
@@ -55,22 +53,24 @@ const DayBlock = ({ day, schedules, setSchedules }) => {
 
   return (
     <Animated.View style={styles.dayBlockContainer} entering={_entering} exiting={_exiting} layout={_layout}>
-      <TouchableOpacity onPress={() => setShowStartTimePicker(true)}>
-        <TextInput
-          style={styles.input}
-          placeholder="Start Time (e.g., 9:00 AM)"
-          value={startTime}
-          editable={false}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setShowEndTimePicker(true)}>
-        <TextInput
-          style={styles.input}
-          placeholder="End Time (e.g., 5:00 PM)"
-          value={endTime}
-          editable={false}
-        />
-      </TouchableOpacity>
+      <View style={styles.timeContainer}>
+        <TouchableOpacity onPress={() => setShowStartTimePicker(true)} style={styles.timeCard}>
+          <TextInput
+            style={styles.input}
+            placeholder="Opens At"
+            value={startTime}
+            editable={false}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowEndTimePicker(true)} style={[styles.timeCard, styles.endTimeCard]}>
+          <TextInput
+            style={styles.input}
+            placeholder="Closes At"
+            value={endTime}
+            editable={false}
+          />
+        </TouchableOpacity>
+      </View>
       {showStartTimePicker && (
         <DateTimePicker
           value={new Date()}
@@ -126,9 +126,11 @@ const Schedule = ({ schedules, setSchedules }) => {
           schedules[day]?.startTime && schedules[day]?.endTime && (
             <View key={day} style={styles.dayPreview}>
               <Text style={styles.previewDay}>{day}</Text>
-              <Text style={styles.slotText}>
-                {schedules[day].startTime} - {schedules[day].endTime}
-              </Text>
+              <View style={styles.slotCard}>
+                <Text style={styles.slotText}>
+                  {schedules[day].startTime} - {schedules[day].endTime}
+                </Text>
+              </View>
             </View>
           )
         ))}
@@ -177,11 +179,24 @@ const styles = StyleSheet.create({
   dayBlockContainer: {
     gap: spacing,
   },
-  input: {
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  timeCard: {
+    flex: 1,
     borderWidth: 1,
     borderColor: _color,
     borderRadius: _borderRadius - spacing / 2,
     padding: spacing / 2,
+    marginRight: spacing / 2,
+    backgroundColor: '#d1e7dd',
+  },
+  endTimeCard: {
+    backgroundColor: '#f8d7da',
+    marginRight: 0,
+  },
+  input: {
     textAlign: 'center',
   },
   previewContainer: {
@@ -192,11 +207,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#ecf2f9',
     padding: spacing,
     borderRadius: _borderRadius - spacing / 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   previewDay: {
     fontWeight: 'bold',
     fontSize: 14,
     marginBottom: spacing / 2,
+  },
+  slotCard: {
+    backgroundColor: '#ffcab0',
+    padding: spacing,
+    borderRadius: _borderRadius - spacing / 2,
+    marginRight: spacing,
   },
   slotText: {
     fontSize: 14,
