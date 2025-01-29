@@ -288,13 +288,11 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         }
       }
 
-      // Ensure workingDays is an array of objects and remove duplicates
-      const formattedWorkingDays = Object.keys(workingDays).reduce((acc, day) => {
-        if (workingDays[day].length > 0) {
-          acc.push({ day, slots: workingDays[day].map(slot => ({ ...slot })) });
-        }
-        return acc;
-      }, []);
+      // Ensure workingDays is an array of objects
+      const formattedWorkingDays = Object.keys(workingDays).map(day => ({
+        day,
+        slots: workingDays[day]
+      }));
 
       const payload = {
         userId,
@@ -308,8 +306,8 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         services: selectedServices,
       };
 
-      console.log(payload);
-
+      console.log(payload)
+      
       const response = await fetch('https://medplus-health.onrender.com/api/professionals/practice', {
         method: 'POST',
         headers: {
@@ -318,11 +316,13 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         body: JSON.stringify(payload),
       });
 
-      console.log(response);
+
+      console.log(response)
 
       if (!response.ok) throw new Error('Failed to update practice information');
 
       Alert.alert('Practice information updated successfully.');
+     
     } catch (error) {
       console.error('Failed to update practice information:', error);
       Alert.alert('Failed to update practice information');
@@ -398,29 +398,11 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
     );
   };
 
-  const toggleInsuranceProvider = (providerId: string) => {
-    setSelectedInsuranceProviders((prev) =>
-      prev.includes(providerId)
-        ? prev.filter((id) => id !== providerId)
-        : [...prev, providerId]
-    );
-  };
-
   const goBack = () => {
     router.push('/(tabs)/profile'); // Replace '/previousRoute' with the actual route you want to navigate to
   };
 
-  const addExperience = () => {
-    setExperience((prev) => [
-      ...prev,
-      { institution, year, roles, notableAchievement },
-    ]);
-    setInstitution('');
-    setYear('');
-    setRoles('');
-    setNotableAchievement('');
-    setShowExperienceInput(false);
-  };
+ 
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>

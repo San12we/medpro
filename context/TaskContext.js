@@ -1,37 +1,59 @@
-import React, { createContext, useState } from 'react';
-import useAppointments from '../hooks/useAppointments';
+import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
 
 export const TaskContext = createContext();
 
-// todo
-// fetch appointments using the doctorsId
-// map the appointments into the tasks
-
 export const TaskProvider = ({ children }) => {
   const [items, setItems] = useState({
-    tasks: {
-      '2024-05-14': [{ name: 'Meeting with client', time: '10:00 AM To 11:00 AM', task: 'Discuss project updates', myStatus: 'Pending' }],
-      '2024-04-30': [
-        { name: 'Team brainstorming session', time: '9:00 AM', task: 'Plan upcoming tasks', myStatus: 'In Progress' },
-        { name: 'Project presentation', time: '2:00 PM', task: 'Present project progress', myStatus: 'Done' },
-        { name: 'Project presentation', time: '5:00 PM', task: 'Review feedback', myStatus: 'Pending' }
-      ],
-      '2024-05-15': [
-        { name: 'Team brainstorming session', time: '9:00 AM', task: 'Discuss project strategies', myStatus: 'In Progress' },
-        { name: 'Project presentation', time: '2:00 PM', task: 'Finalize project plan', myStatus: 'Done' }
-      ],
-      '2024-05-13': [
-        { name: 'Team brainstorming session', time: '9:00 AM', task: 'Brainstorm new ideas', myStatus: 'Pending' },
-        { name: 'Project presentation', time: '2:00 PM', task: 'Review project milestones', myStatus: 'Done' }
-      ],
-    },
+    tasks: {},
     schedules: {},
   });
 
-  const { appointments } = useAppointments();
+  useEffect(() => {
+    const fetchProfessionalIdAndAppointments = async () => {
+      try {
+        const storedProfessionalId = await AsyncStorage.getItem('professionalId');
+        if (storedProfessionalId) {
+          fetchAppointments(storedProfessionalId);
+        }
+      } catch (error) {
+        console.error('Error fetching professional ID from AsyncStorage:', error);
+      }
+    };
 
-  // Log appointments
-  console.log('Appointments:', appointments);
+    fetchProfessionalIdAndAppointments();
+  }, []);
+
+  const fetchAppointments = async (professionalId) => {
+    try {
+      const response = await axios.get(`https://medplus-health.onrender.com/api/appointments/doctor/${professionalId}`);
+      const appointments = response.data;
+
+      const tasks = appointments.reduce((acc, appointment) => {
+        const dateKey = new Date(appointment.date).toISOString().split('T')[0];
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push({
+          name: `Appointment with ${appointment.patientName}`,
+          time: appointment.time,
+          task: `Consultation`,
+          myStatus: appointment.status,
+        });
+        return acc;
+      }, {});
+
+      setItems((prevItems) => ({
+        ...prevItems,
+        tasks: {
+          ...prevItems.tasks,
+          ...tasks,
+        },
+      }));
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  };
 
   const addTask = (newEntry) => {
     const dateKey = new Date().toISOString().split('T')[0]; // Use current date as key

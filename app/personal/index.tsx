@@ -35,6 +35,7 @@ const ProfileScreen = () => {
             setFullName(user.firstName)
             setEmail(user.username)
             setProfileImage(user.profileImage)
+            console.log('User ID:', user.userId); // Log the userId
         }
     }, [user])
 
@@ -46,16 +47,21 @@ const ProfileScreen = () => {
     }
 
     const handleSubmit = async () => {
-        if (!profileImage || !fullName || !email || !phoneNumber) {
-            Alert.alert('Please fill out all fields and upload a profile image.')
+        if (!fullName || !email || !phoneNumber) {
+            Alert.alert('Please fill out all fields.')
             return
         }
 
         try {
             setUploading(true)
-            const profileImageUrl = await uploadImage(profileImage)
-            if (!profileImageUrl) {
-                throw new Error('Failed to upload image')
+            let profileImageUrl = profileImage
+
+            // Check if the profile image has changed
+            if (profileImage && profileImage !== user.profileImage) {
+                profileImageUrl = await uploadImage(profileImage)
+                if (!profileImageUrl) {
+                    throw new Error('Failed to upload image')
+                }
             }
 
             const payload = {
@@ -64,8 +70,9 @@ const ProfileScreen = () => {
                 phoneNumber,
                 profileImage: profileImageUrl,
             }
+            console.log(payload)
 
-            await updateDoctorProfile(payload)
+            await updateDoctorProfile(payload, user.userId)
         } catch (error) {
             console.error('Failed to update profile:', error)
             Alert.alert('Failed to update profile')

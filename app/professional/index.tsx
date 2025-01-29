@@ -3,7 +3,6 @@ import { View, Text, TextInput, StyleSheet, Alert, ScrollView, Image, TouchableO
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
 import { fontSize, iconSize, spacing } from '../../constants/dimensions';
 import { Colors } from '../../constants/Colors';
@@ -12,10 +11,14 @@ import CustomInput from '../../components/CustomInput';
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import FeatherIcon from '@expo/vector-icons/Feather';
+import { useDispatch, useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProfessionalDetailsScreen = () => {
   const router = useRouter();
   const { colors } = useTheme();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth?.user);
   const [formData, setFormData] = useState({
     medicalDegree: '',
     institution: '',
@@ -27,24 +30,30 @@ const ProfessionalDetailsScreen = () => {
     specializedTreatment: '',
   });
   const [consultationFee, setConsultationFee] = useState('');
-  const [professionalId, setProfessionalId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [professionalId, setProfessionalId] = useState(null);
 
   useEffect(() => {
     const fetchProfessionalId = async () => {
-      try {
-        const storedUserData = await AsyncStorage.getItem('userData');
-        if (storedUserData) {
-          const userData = JSON.parse(storedUserData);
-          setProfessionalId(userData.userId);
+      if (user && user.professional) {
+        setProfessionalId(user.professional);
+      } else {
+        const storedProfessionalId = await AsyncStorage.getItem('professionalId');
+        if (storedProfessionalId) {
+          setProfessionalId(storedProfessionalId);
         }
-      } catch (error) {
-        console.error('Error retrieving professionalId:', error);
       }
     };
 
     fetchProfessionalId();
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      console.log('User:', user); // Log the entire user object
+      console.log('Professional ID:', professionalId);
+    }
+  }, [user, professionalId]);
 
   const handleInputChange = (field, value) => {
     setFormData((prevData) => ({ ...prevData, [field]: value }));

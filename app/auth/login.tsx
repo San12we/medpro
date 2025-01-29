@@ -114,6 +114,7 @@ export default function LoginScreen() {
       if (response.token) {
         await AsyncStorage.setItem("userToken", response.token);
         await AsyncStorage.setItem("userId", response.user._id);
+        await AsyncStorage.setItem("professionalId", response.professionalId); // Store professionalId in AsyncStorage
         dispatch(loginAction({ user: response.user, token: response.token, professionalId: response.professionalId }));
         if (response.user.completedProfile) {
           router.replace("/(tabs)/home");

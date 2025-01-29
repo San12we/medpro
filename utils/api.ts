@@ -14,7 +14,7 @@ export const fetchBanks = async () => {
   }
 };
 
-export const fetchSubaccountInfo = async (userId: string | null) => {
+export const fetchSubaccountInfo = async (userId: string) => {
   if (!userId) return null;
   try {
     const response = await axios.get(`https://medplus-health.onrender.com/api/subaccount/${userId}`);
@@ -24,7 +24,7 @@ export const fetchSubaccountInfo = async (userId: string | null) => {
   }
 };
 
-export const fetchTransactions = async () => {
+export const fetchTransactions = async (userId: string) => {
   try {
     const reference = await AsyncStorage.getItem('transactionReference');
     if (!reference) throw new Error('Transaction reference not found.');
@@ -37,15 +37,14 @@ export const fetchTransactions = async () => {
   }
 };
 
-export const createSubaccount = async (data: {
+export const createSubaccount = async (userId: string, data: {
   business_name: string;
   settlement_bank: string;
   account_number: string;
   percentage_charge: string;
-  professionalId: string;
 }) => {
   try {
-    await axios.post('https://medplus-health.onrender.com/api/payment/create-subaccount', data);
+    await axios.post('https://medplus-health.onrender.com/api/payment/create-subaccount', { ...data, professionalId: userId });
   } catch (error) {
     throw new Error('Failed to create subaccount.');
   }
@@ -56,9 +55,9 @@ export const updateDoctorProfile = async (payload: {
   email: string;
   phoneNumber: string;
   profileImage: string;
-}) => {
+}, userId: string) => {
   try {
-    const response = await axios.post('https://medplus-health.onrender.com/api/users/updateDoctorProfile', payload, {
+    const response = await axios.post('https://medplus-health.onrender.com/api/users/updateDoctorProfile', { ...payload, userId }, {
       headers: {
         'Content-Type': 'application/json',
       },
