@@ -288,11 +288,13 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         }
       }
 
-      // Ensure workingDays is an array of objects
-      const formattedWorkingDays = Object.keys(workingDays).map(day => ({
-        day,
-        slots: workingDays[day]
-      }));
+      // Ensure workingDays is an array of objects and remove duplicates
+      const formattedWorkingDays = Object.keys(workingDays).reduce((acc, day) => {
+        if (workingDays[day].length > 0) {
+          acc.push({ day, slots: workingDays[day].map(slot => ({ ...slot })) });
+        }
+        return acc;
+      }, []);
 
       const payload = {
         userId,
