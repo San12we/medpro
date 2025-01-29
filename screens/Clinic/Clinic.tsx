@@ -38,7 +38,6 @@ import Schedule from '../../components/Schedule';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import FeatherIcon from '@expo/vector-icons/Feather';
-
 type WorkingDaySlot = {
   startTime: string;
   endTime: string;
@@ -103,7 +102,7 @@ const Hourblock: React.FC<{ block: string }> = ({ block }) => (
   </View>
 );
 
-const DayBlock: React.FC<{
+const Day: React.FC<{
   day: string;
   workingDays: WorkingDays;
   setWorkingDays: React.Dispatch<React.SetStateAction<WorkingDays>>;
@@ -111,7 +110,7 @@ const DayBlock: React.FC<{
   const slots = workingDays[day] || [];
   const [recurrence, setRecurrence] = useState('None');
 
-  const addSlot = () => {
+  const addSlot = (day: string) => {
     setWorkingDays((prev) => {
       const updatedDaySlots = [...(prev[day] || [])];
       const nextSlot = {
@@ -123,8 +122,7 @@ const DayBlock: React.FC<{
       return { ...prev, [day]: updatedDaySlots };
     });
   };
-
-  const removeSlot = (index) => {
+  const removeSlot = (day: string, index: number) => {
     setWorkingDays((prev) => {
       const updatedDaySlots = (prev[day] || []).filter((_, i) => i !== index);
       return { ...prev, [day]: updatedDaySlots };
@@ -174,7 +172,7 @@ const DayBlock: React.FC<{
   );
 };
 
-const Day: React.FC<{
+const DayBlock: React.FC<{
   day: string;
   workingDays: WorkingDays;
   setWorkingDays: React.Dispatch<React.SetStateAction<WorkingDays>>;
@@ -293,13 +291,15 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         practiceName,
         practiceLocation,
         profileImage: profileImageUrl,
-        workingDays,
+        workingDays, // Correctly structured workingDays
         experience,
         insuranceProviders: selectedInsuranceProviders,
         contactInfo: { phone, email, website },
         services: selectedServices,
       };
 
+      console.log(payload)
+      
       const response = await fetch('https://medplus-health.onrender.com/api/professionals/practice', {
         method: 'POST',
         headers: {
@@ -308,8 +308,9 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         body: JSON.stringify(payload),
       });
 
+
       console.log(response)
-      
+
       if (!response.ok) throw new Error('Failed to update practice information');
 
       Alert.alert('Practice information updated successfully.');
@@ -322,37 +323,39 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
     }
   };
 
-  const handleStartTimeChange = (event: any, selectedTime: Date | undefined) => {
+  const handleStartTimeChange = (event: any, selectedTime: Date | undefined, day: string, index: number) => {
     setShowStartTimePicker(false);
     if (selectedTime) {
       const hours = selectedTime.getHours();
       const minutes = selectedTime.getMinutes();
       const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-      if (currentDayIndex !== null) {
-        const updatedDays = { ...workingDays };
-        if (updatedDays[currentDayIndex] && updatedDays[currentDayIndex][0]) {
-          updatedDays[currentDayIndex][0].startTime = formattedTime;
+      setWorkingDays((prev) => {
+        const updatedDays = { ...prev };
+        if (updatedDays[day] && updatedDays[day][index]) {
+          updatedDays[day][index].startTime = formattedTime;
         }
-        setWorkingDays(updatedDays);
-      }
+        return updatedDays;
+      });
     }
   };
-
-  const handleEndTimeChange = (event: any, selectedTime: Date | undefined) => {
+  
+  const handleEndTimeChange = (event: any, selectedTime: Date | undefined, day: string, index: number) => {
     setShowEndTimePicker(false);
     if (selectedTime) {
       const hours = selectedTime.getHours();
       const minutes = selectedTime.getMinutes();
       const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-      if (currentDayIndex !== null) {
-        const updatedDays = { ...workingDays };
-        if (updatedDays[currentDayIndex] && updatedDays[currentDayIndex][0]) {
-          updatedDays[currentDayIndex][0].endTime = formattedTime;
+      setWorkingDays((prev) => {
+        const updatedDays = { ...prev };
+        if (updatedDays[day] && updatedDays[day][index]) {
+          updatedDays[day][index].endTime = formattedTime;
         }
-        setWorkingDays(updatedDays);
-      }
+        return updatedDays;
+      });
     }
   };
+
+
 
   const renderInsuranceProvider = ({ item }: { item: InsuranceProvider }) => (
     <TouchableOpacity
