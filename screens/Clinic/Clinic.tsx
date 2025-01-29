@@ -410,7 +410,17 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
     router.push('/(tabs)/profile'); // Replace '/previousRoute' with the actual route you want to navigate to
   };
 
- 
+  const addExperience = () => {
+    setExperience((prev) => [
+      ...prev,
+      { institution, year, roles, notableAchievement },
+    ]);
+    setInstitution('');
+    setYear('');
+    setRoles('');
+    setNotableAchievement('');
+    setShowExperienceInput(false);
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
