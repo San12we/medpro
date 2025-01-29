@@ -306,8 +306,8 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         services: selectedServices,
       };
 
-      console.log(payload)
-      
+      console.log(payload);
+
       const response = await fetch('https://medplus-health.onrender.com/api/professionals/practice', {
         method: 'POST',
         headers: {
@@ -316,13 +316,11 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         body: JSON.stringify(payload),
       });
 
-
-      console.log(response)
+      console.log(response);
 
       if (!response.ok) throw new Error('Failed to update practice information');
 
       Alert.alert('Practice information updated successfully.');
-     
     } catch (error) {
       console.error('Failed to update practice information:', error);
       Alert.alert('Failed to update practice information');
