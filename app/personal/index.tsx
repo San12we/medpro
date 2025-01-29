@@ -11,7 +11,7 @@ import Ionicons from "react-native-vector-icons/Ionicons"
 import FeatherIcon from '@expo/vector-icons/Feather';
 
 import { useTheme } from '@react-navigation/native'
-import { ProfileImg, backArrowImg } from '@/theme/Images'
+import { ProfileImg } from '@/theme/Images'
 
 import { pickImage, uploadImage } from '../../utils/imageUtils'
 import { updateDoctorProfile } from '../../utils/api'
@@ -70,9 +70,10 @@ const ProfileScreen = () => {
                 phoneNumber,
                 profileImage: profileImageUrl,
             }
-            console.log(payload)
+            console.log('Payload:', payload)
 
             await updateDoctorProfile(payload, user.userId)
+            Alert.alert('Success', 'Profile updated successfully!')
         } catch (error) {
             console.error('Failed to update profile:', error)
             Alert.alert('Failed to update profile')
