@@ -62,7 +62,7 @@ export const updateDoctorProfile = async (payload: {
         'Content-Type': 'application/json',
       },
     });
-    if (!response.ok) throw new Error('Failed to update profile');
+    if (response.status !== 200) throw new Error('Failed to update profile');
   } catch (error) {
     throw new Error('Failed to update profile');
   }
