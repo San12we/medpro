@@ -398,6 +398,14 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
     );
   };
 
+  const toggleInsuranceProvider = (providerId: string) => {
+    setSelectedInsuranceProviders((prev) =>
+      prev.includes(providerId)
+        ? prev.filter((id) => id !== providerId)
+        : [...prev, providerId]
+    );
+  };
+
   const goBack = () => {
     router.push('/(tabs)/profile'); // Replace '/previousRoute' with the actual route you want to navigate to
   };
