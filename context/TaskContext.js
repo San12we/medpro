@@ -10,21 +10,28 @@ export const TaskProvider = ({ children }) => {
     tasks: {},
     schedules: {},
   });
+  const [professionalId, setProfessionalId] = useState(null); // Add state for professionalId
 
   useEffect(() => {
-    const fetchProfessionalIdAndAppointments = async () => {
+    const fetchProfessionalId = async () => {
       try {
         const storedProfessionalId = await AsyncStorage.getItem('professionalId');
         if (storedProfessionalId) {
-          fetchAppointments(storedProfessionalId);
+          setProfessionalId(storedProfessionalId);
         }
       } catch (error) {
         console.error('Error fetching professional ID from AsyncStorage:', error);
       }
     };
 
-    fetchProfessionalIdAndAppointments();
-  }, []);
+    fetchProfessionalId();
+  }, []); // Fetch professionalId on component mount
+
+  useEffect(() => {
+    if (professionalId) {
+      fetchAppointments(professionalId);
+    }
+  }, [professionalId]); // Trigger fetchAppointments when professionalId changes
 
   const fetchAppointments = async (professionalId) => {
     try {
