@@ -337,6 +337,165 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: _borderRadius - spacing / 2,
   },
+  toggleIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'blue',
+  },
+  input: {
+    textAlign: 'center',
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  timeCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: _color,
+    borderRadius: _borderRadius - spacing / 2,
+    padding: spacing / 2,
+    marginRight: spacing / 2,
+    backgroundColor: '#d1e7dd',
+  },
+  endTimeCard: {
+    backgroundColor: '#f8d7da',
+    marginRight: 0,
+  },
+  timeText: {
+    textAlign: 'center',
+  },
+  timeInput: {
+    textAlign: 'center',
+    padding: 0,
+    margin: 0,
+  },
+  timeInputContainer: {
+    padding: 0,
+    margin: 0,
+    width: 60,
+  },
+  timeInputText: {
+    textAlign: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputIconContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputContainer: {
+    padding: 0,
+    margin: 0,
+    width: 60,
+  },
+  timeInputText: {
+    textAlign: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputIconContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputContainer: {
+    padding: 0,
+    margin: 0,
+    width: 60,
+  },
+  timeInputText: {
+    textAlign: 'center',
+  },
+
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputIconContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputContainer: {
+    padding: 0,
+    margin: 0,
+    width: 60,
+  },
+  timeInputText: {
+    textAlign: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputIconContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputContainer: {
+    padding: 0,
+    margin: 0,
+    width: 60,
+  },
+  timeInputText: {
+    textAlign: 'center',
+  },
+  timeInputIcon: {
+    width: 20,
+    height: 20,
+    tintColor: 'black',
+  },
+  timeInputIconContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default styles;
