@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   SafeAreaView,
   Alert,
@@ -19,7 +18,6 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import useInsurance from '../../hooks/useInsurance';
-
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { fontSize, iconSize, spacing } from '../../constants/dimensions';
@@ -34,10 +32,10 @@ import styles from './Style/ClinicStyle';
 import { pickImage, uploadImage } from '../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser } from '../../app/(redux)/userSlice';
-import Schedule from '../../components/Schedule';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import FeatherIcon from '@expo/vector-icons/Feather';
+
 type WorkingDaySlot = {
   startTime: string;
   endTime: string;
@@ -102,15 +100,14 @@ const Hourblock: React.FC<{ block: string }> = ({ block }) => (
   </View>
 );
 
-const Day: React.FC<{
+const DayBlock: React.FC<{
   day: string;
   workingDays: WorkingDays;
   setWorkingDays: React.Dispatch<React.SetStateAction<WorkingDays>>;
 }> = ({ day, workingDays, setWorkingDays }) => {
   const slots = workingDays[day] || [];
-  const [recurrence, setRecurrence] = useState('None');
 
-  const addSlot = (day: string) => {
+  const addSlot = () => {
     setWorkingDays((prev) => {
       const updatedDaySlots = [...(prev[day] || [])];
       const nextSlot = {
@@ -122,7 +119,8 @@ const Day: React.FC<{
       return { ...prev, [day]: updatedDaySlots };
     });
   };
-  const removeSlot = (day: string, index: number) => {
+
+  const removeSlot = (index: number) => {
     setWorkingDays((prev) => {
       const updatedDaySlots = (prev[day] || []).filter((_, i) => i !== index);
       return { ...prev, [day]: updatedDaySlots };
@@ -131,18 +129,6 @@ const Day: React.FC<{
 
   return (
     <Animated.View style={styles.dayBlockContainer} entering={_entering} exiting={_exiting} layout={_layout}>
-      <View style={styles.recurrenceContainer}>
-        <Text>Recurrence:</Text>
-        <TouchableOpacity onPress={() => setRecurrence('None')}>
-          <Text style={recurrence === 'None' ? styles.selectedRecurrence : styles.recurrenceOption}>None</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setRecurrence('Daily')}>
-          <Text style={recurrence === 'Daily' ? styles.selectedRecurrence : styles.recurrenceOption}>Daily</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setRecurrence('Weekly')}>
-          <Text style={recurrence === 'Weekly' ? styles.selectedRecurrence : styles.recurrenceOption}>Weekly</Text>
-        </TouchableOpacity>
-      </View>
       {slots.map((slot, index) => (
         <Animated.View
           key={`slot-${index}`}
@@ -172,7 +158,7 @@ const Day: React.FC<{
   );
 };
 
-const DayBlock: React.FC<{
+const Day: React.FC<{
   day: string;
   workingDays: WorkingDays;
   setWorkingDays: React.Dispatch<React.SetStateAction<WorkingDays>>;
@@ -235,7 +221,7 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
   const { missingFields } = useLocalSearchParams();
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-  const [currentDayIndex, setCurrentDayIndex] = useState(null);
+  const [currentDayIndex, setCurrentDayIndex] = useState<string | null>(null);
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -261,26 +247,12 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
     }
   };
 
-  const handleUploadImage = async () => {
-    setUploading(true);
-    try {
-      const profileImageUrl = await uploadImage(profileImage);
-      if (profileImageUrl) {
-        setProfileImage(profileImageUrl);
-      }
-    } catch (error) {
-      console.error('Image upload failed:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSubmit = async () => {
     setUploading(true);
     try {
       let profileImageUrl = profileImage;
       if (!profileImageUrl) {
-        profileImageUrl = await handleUploadImage();
+        profileImageUrl = await handlePickImage();
         if (!profileImageUrl) {
           throw new Error('Failed to upload image');
         }
@@ -291,15 +263,13 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         practiceName,
         practiceLocation,
         profileImage: profileImageUrl,
-        workingDays, // Correctly structured workingDays
+        workingDays,
         experience,
         insuranceProviders: selectedInsuranceProviders,
         contactInfo: { phone, email, website },
         services: selectedServices,
       };
 
-      console.log(payload)
-      
       const response = await fetch('https://medplus-health.onrender.com/api/professionals/practice', {
         method: 'POST',
         headers: {
@@ -308,13 +278,9 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
         body: JSON.stringify(payload),
       });
 
-
-      console.log(response)
-
       if (!response.ok) throw new Error('Failed to update practice information');
 
       Alert.alert('Practice information updated successfully.');
-     
     } catch (error) {
       console.error('Failed to update practice information:', error);
       Alert.alert('Failed to update practice information');
@@ -338,7 +304,7 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
       });
     }
   };
-  
+
   const handleEndTimeChange = (event: any, selectedTime: Date | undefined, day: string, index: number) => {
     setShowEndTimePicker(false);
     if (selectedTime) {
@@ -355,8 +321,6 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
     }
   };
 
-
-
   const renderInsuranceProvider = ({ item }: { item: InsuranceProvider }) => (
     <TouchableOpacity
       style={[
@@ -371,17 +335,15 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
   );
 
   const renderServiceCard = ({ item }: { item: Service }) => (
-    !selectedServices.includes(item.value) && (
-      <TouchableOpacity
-        style={[
-          styles.serviceCard,
-          selectedServices.includes(item.value) && styles.activeServiceCard,
-        ]}
-        onPress={() => toggleService(item.value)}
-      >
-        <Text style={styles.serviceCardText}>{item.label}</Text>
-      </TouchableOpacity>
-    )
+    <TouchableOpacity
+      style={[
+        styles.serviceCard,
+        selectedServices.includes(item.value) && styles.activeServiceCard,
+      ]}
+      onPress={() => toggleService(item.value)}
+    >
+      <Text style={styles.serviceCardText}>{item.label}</Text>
+    </TouchableOpacity>
   );
 
   const toggleService = (service: string) => {
@@ -393,10 +355,8 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
   };
 
   const goBack = () => {
-    router.push('/(tabs)/profile'); // Replace '/previousRoute' with the actual route you want to navigate to
+    router.push('/(tabs)/profile');
   };
-
- 
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -475,14 +435,16 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
           </View>
 
           <Text style={styles.sectionHeader}>Working Days</Text>
-          <Schedule schedules={workingDays} setSchedules={setWorkingDays} />
+          {Object.keys(workingDays).map((day) => (
+            <Day key={day} day={day} workingDays={workingDays} setWorkingDays={setWorkingDays} />
+          ))}
 
           {showStartTimePicker && (
             <DateTimePicker
               value={new Date()}
               mode="time"
               display="default"
-              onChange={handleStartTimeChange}
+              onChange={(event, selectedTime) => handleStartTimeChange(event, selectedTime, currentDayIndex!, 0)}
             />
           )}
           {showEndTimePicker && (
@@ -490,11 +452,9 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
               value={new Date()}
               mode="time"
               display="default"
-              onChange={handleEndTimeChange}
+              onChange={(event, selectedTime) => handleEndTimeChange(event, selectedTime, currentDayIndex!, 0)}
             />
           )}
-
-     
 
           <Text style={styles.sectionHeader}>Experience (Optional)</Text>
           <TouchableOpacity style={styles.addButton} onPress={() => setShowExperienceInput(true)}>
@@ -515,51 +475,233 @@ const PracticeInformation: React.FC<PracticeInformationProps> = () => {
               />
               <CustomInput
                 label='Roles' placeholder='Enter roles'
-                icon={<Feather name={"briefcase"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                icon={<Ionicons name={"person-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
                 value={roles} onChangeText={setRoles}
               />
               <CustomInput
                 label='Notable Achievement' placeholder='Enter notable achievement'
-                icon={<Feather name={"award"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
+                icon={<Ionicons name={"medal-outline"} size={iconSize.md} color={Colors.light.iconSecondary} style={styles.icon} />}
                 value={notableAchievement} onChangeText={setNotableAchievement}
               />
-              <TouchableOpacity style={styles.addButton} onPress={addExperience}>
-                <Text style={styles.addButtonText}>Save Experience</Text>
+              <TouchableOpacity style={styles.addButton} onPress={() => {
+                setShowExperienceInput(false);
+                setExperience((prev) => [...prev, { institution, year, roles, notableAchievement }]);
+                setInstitution('');
+                setYear('');
+                setRoles('');
+                setNotableAchievement('');
+              }}>
+                <Text style={styles.addButtonText}>Add</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {experience.length > 0 && (
-            <View style={styles.experienceList}>
-              {experience.map((exp, index) => (
-                <View key={index} style={styles.experienceItem}>
-                  <Text style={styles.experienceInstitution}>{exp.institution}</Text>
-                  <Text style={styles.experienceDetails}>
-                    {exp.year} - {exp.roles}
-                  </Text>
-                  <Text style={styles.experienceAchievement}>
-                    Achievement: {exp.notableAchievement}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
+          <View style={styles.experienceContainer}>
+            {experience.map((exp, index) => (
+              <View key={index} style={styles.experienceCard}>
+                <Text style={styles.experienceCardText}>{exp.institution}</Text>
+                <Text style={styles.experienceCardText}>{exp.year}</Text>
+                <Text style={styles.experienceCardText}>{exp.roles}</Text>
+                <Text style={styles.experienceCardText}>{exp.notableAchievement}</Text>
+              </View>
+            ))}
+          </View>
 
-          <TouchableOpacity
-            style={[styles.submitButton, { borderColor: Colors.light.orange }]}
-            onPress={handleSubmit}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={[styles.submitButtonText, { color: '#000' }]}>Submit</Text>
-            )}
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: spacing.md,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  textAdd: {
+    fontSize: fontSize.lg,
+    fontFamily: fontFamily.bold,
+  },
+  profileContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  profileImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 0,
+  },
+  placeholderImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: Colors.light.gray,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: Colors.light.textSecondary,
+    fontSize: fontSize.md,
+  },
+  editButton: {
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: Colors.light.primary,
+    borderRadius: _borderRadius,
+  },
+  editButtonText: {
+    color: Colors.light.textPrimary,
+    fontSize: fontSize.md,
+  },
+  sectionHeader: {
+    fontSize: fontSize.lg,
+    fontFamily: fontFamily.bold,
+    marginVertical: spacing.md,
+  },
+  servicesContainer: {
+    paddingVertical: spacing.sm,
+  },
+  serviceCard: {
+    padding: spacing.sm,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: _borderRadius,
+    marginRight: spacing.sm,
+  },
+  activeServiceCard: {
+    backgroundColor: Colors.light.primary,
+  },
+  serviceCardText: {
+    color: Colors.light.textPrimary,
+    fontSize: fontSize.md,
+  },
+  selectedServicesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: spacing.md,
+  },
+  insuranceProvidersContainer: {
+    paddingVertical: spacing.sm,
+  },
+  insuranceProviderCard: {
+    padding: spacing.sm,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: _borderRadius,
+    marginRight: spacing.sm,
+    alignItems: 'center',
+  },
+  activeInsuranceProviderCard: {
+    backgroundColor: Colors.light.primary,
+  },
+  insuranceProviderIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: spacing.sm,
+  },
+  insuranceProviderCardText: {
+    color: Colors.light.textPrimary,
+    fontSize: fontSize.md,
+  },
+  dayContainer: {
+    padding: spacing.md,
+    borderRadius: _borderRadius,
+    marginBottom: spacing.md,
+  },
+  dayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  daySwitch: {
+    transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+  },
+  dayBlockContainer: {
+    padding: spacing.md,
+    borderRadius: _borderRadius,
+    backgroundColor: Colors.light.cardBackground,
+    marginBottom: spacing.md,
+  },
+  dayBlockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  hourBlock: {
+    padding: spacing.sm,
+    backgroundColor: Colors.light.gray,
+    borderRadius: _borderRadius,
+    marginHorizontal: spacing.sm,
+  },
+  removeButton: {
+    padding: spacing.sm,
+    backgroundColor: Colors.light.danger,
+    borderRadius: _borderRadius,
+  },
+  addHourButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.sm,
+    backgroundColor: Colors.light.primary,
+    borderRadius: _borderRadius,
+    marginTop: spacing.md,
+  },
+  addHourIcon: {
+    width: 20,
+    height: 20,
+    marginRight: spacing.sm,
+  },
+  addButton: {
+    padding: spacing.md,
+    backgroundColor: Colors.light.primary,
+    borderRadius: _borderRadius,
+    alignItems: 'center',
+    marginVertical: spacing.md,
+  },
+  addButtonText: {
+    color: Colors.light.textPrimary,
+    fontSize: fontSize.md,
+  },
+  experienceInputContainer: {
+    padding: spacing.md,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: _borderRadius,
+    marginBottom: spacing.md,
+  },
+  experienceContainer: {
+    marginVertical: spacing.md,
+  },
+  experienceCard: {
+    padding: spacing.md,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: _borderRadius,
+    marginBottom: spacing.sm,
+  },
+  experienceCardText: {
+    fontSize: fontSize.md,
+    color: Colors.light.textPrimary,
+  },
+  submitButton: {
+    padding: spacing.md,
+    backgroundColor: Colors.light.primary,
+    borderRadius: _borderRadius,
+    alignItems: 'center',
+    marginVertical: spacing.md,
+  },
+  submitButtonText: {
+    color: Colors.light.textPrimary,
+    fontSize: fontSize.md,
+  },
+});
 
 export default PracticeInformation;
