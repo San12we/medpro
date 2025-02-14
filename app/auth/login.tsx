@@ -10,6 +10,7 @@ import { loginAction } from "..//(redux)/authSlice";
 import { LoginImg, UserImg, PasswordImg } from "../../theme/Images";
 import { emailValidator } from "@/helpers/emailValidator";
 import { passwordValidator } from "@/helpers/passwordValidator";
+import LoadingScreen from "../../screens/Loader/LoadingScreen"; // Import LoadingScreen
 
 const styles = StyleSheet.create({
   loginContainer: {
@@ -114,12 +115,17 @@ export default function LoginScreen() {
       if (response.token) {
         await AsyncStorage.setItem("userToken", response.token);
         await AsyncStorage.setItem("userId", response.user._id);
-        await AsyncStorage.setItem("professionalId", response.professionalId); // Store professionalId in AsyncStorage
+        await AsyncStorage.setItem("professionalId", response.professionalId); // Update professionalId in AsyncStorage
         dispatch(loginAction({ user: response.user, token: response.token, professionalId: response.professionalId }));
-        if (response.user.completedProfile) {
-          router.replace("/(tabs)/home");
+        
+        if (response.user.userType === "professional") {
+          if (response.user.completedProfile) {
+            router.replace("/(tabs)/home");
+          } else {
+            router.replace("/(tabs)/profile");
+          }
         } else {
-          router.replace("/(tabs)/profile");
+          router.replace("/auth/register");
         }
       } else {
         setFeedback("Invalid email or password");
@@ -132,49 +138,55 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.loginContainer}>
-      <Image source={LoginImg} style={styles.loginImg} />
-      <View style={styles.mainContainer}>
-        <Text style={styles.welComeText}>Hello, {"\n"} Welcome back</Text>
-        <View style={styles.loginInputView}>
-          <Image source={UserImg} style={styles.imgInput} />
-          <TextInput
-            placeholder="Email"
-            style={styles.loginInput}
-            value={email.value}
-            onChangeText={(text) => setEmail({ value: text, error: "" })}
-            autoCapitalize="none"
-            textContentType="emailAddress"
-            keyboardType="email-address"
-          />
-        </View>
-        <View style={styles.loginInputView}>
-          <Image source={PasswordImg} style={styles.imgInput} />
-          <TextInput
-            placeholder="Password"
-            style={styles.loginInput}
-            value={password.value}
-            onChangeText={(text) => setPassword({ value: text, error: "" })}
-            secureTextEntry
-          />
-        </View>
-         <View style={styles.forgotPassword}>
-        <TouchableOpacity onPress={() => router.push("/auth/resetPassword")}>
-          <Text style={styles.forgot}>Forgot your password?</Text>
-        </TouchableOpacity>
-      </View>
-        <TouchableOpacity
-          style={[styles.btn, loading && { backgroundColor: '#ccc' }]}
-          onPress={onLoginPressed}
-          disabled={loading}
-        >
-          <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
-        </TouchableOpacity>
-        <Text style={styles.contiueText}>or continue with</Text>
-      </View>
-      <TouchableOpacity onPress={() => router.replace("/auth/register")}>
-        <Text style={styles.signupText}>Don't have an account? Sign up</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    <>
+      {loading ? (
+        <LoadingScreen message="Signing in..." /> // Use LoadingScreen with custom message
+      ) : (
+        <ScrollView contentContainerStyle={styles.loginContainer}>
+          <Image source={LoginImg} style={styles.loginImg} />
+          <View style={styles.mainContainer}>
+            <Text style={styles.welComeText}>Hello, {"\n"} Welcome back</Text>
+            <View style={styles.loginInputView}>
+              <Image source={UserImg} style={styles.imgInput} />
+              <TextInput
+                placeholder="Email"
+                style={styles.loginInput}
+                value={email.value}
+                onChangeText={(text) => setEmail({ value: text, error: "" })}
+                autoCapitalize="none"
+                textContentType="emailAddress"
+                keyboardType="email-address"
+              />
+            </View>
+            <View style={styles.loginInputView}>
+              <Image source={PasswordImg} style={styles.imgInput} />
+              <TextInput
+                placeholder="Password"
+                style={styles.loginInput}
+                value={password.value}
+                onChangeText={(text) => setPassword({ value: text, error: "" })}
+                secureTextEntry
+              />
+            </View>
+            <View style={styles.forgotPassword}>
+              <TouchableOpacity onPress={() => router.push("/auth/resetPassword")}>
+                <Text style={styles.forgot}>Forgot your password?</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={[styles.btn, loading && { backgroundColor: '#ccc' }]}
+              onPress={onLoginPressed}
+              disabled={loading}
+            >
+              <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
+            </TouchableOpacity>
+            <Text style={styles.contiueText}>or continue with</Text>
+          </View>
+          <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+            <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+    </>
   );
 }

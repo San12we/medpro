@@ -37,14 +37,16 @@ export const fetchTransactions = async (userId: string) => {
   }
 };
 
-export const createSubaccount = async (userId: string, data: {
+export const createSubaccount = async (data: {
   business_name: string;
   settlement_bank: string;
   account_number: string;
   percentage_charge: string;
 }) => {
   try {
-    await axios.post('https://medplus-health.onrender.com/api/payment/create-subaccount', { ...data, professionalId: userId });
+    const professionalId = await getProfessionalId();
+    if (!professionalId) throw new Error('Professional ID not found.');
+    await axios.post('https://medplus-health.onrender.com/api/payment/create-subaccount', { ...data, professionalId });
   } catch (error) {
     throw new Error('Failed to create subaccount.');
   }
@@ -65,5 +67,14 @@ export const updateDoctorProfile = async (payload: {
     if (response.status !== 200) throw new Error('Failed to update profile');
   } catch (error) {
     throw new Error('Failed to update profile');
+  }
+};
+
+export const getProfessionalId = async (): Promise<string | null> => {
+  try {
+    const professionalId = await AsyncStorage.getItem('professionalId');
+    return professionalId;
+  } catch (error) {
+    throw new Error('Failed to retrieve professionalId.');
   }
 };

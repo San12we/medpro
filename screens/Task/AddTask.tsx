@@ -85,7 +85,7 @@ function DayBlock({ userId, day, schedules, setSchedules }: { userId: string; da
 
       updatedDaySlots.push(nextSlot);
 
-      // Store recurrence pattern without duplicating slots
+    
       return { ...prev, [day]: updatedDaySlots };
     });
 
@@ -194,6 +194,7 @@ function Day({ userId, day, schedules, setSchedules }: { userId: string; day: st
 const AddTask = () => {
   const [schedules, setSchedules] = useState<any>({});
   const [isSubmitted, setIsSubmitted] = useState(false); // Track if schedules have been submitted
+  const [professionalId, setProfessionalId] = useState<string | null>(null); // State to store professionalId
   const user = useSelector((state: any) => state.auth?.user); // Access user from state with optional chaining
   const router = useRouter(); // Initialize router
   console.log('User:', user); // Log user for debugging
@@ -211,7 +212,17 @@ const AddTask = () => {
       }
     };
 
+    const loadProfessionalId = async () => {
+      try {
+        const storedProfessionalId = await AsyncStorage.getItem('professionalId');
+        setProfessionalId(storedProfessionalId);
+      } catch (error) {
+        console.error('Error loading professionalId:', error);
+      }
+    };
+
     loadSchedules();
+    loadProfessionalId();
   }, []);
 
   const persistSchedules = async (newSchedules: any) => {
@@ -222,21 +233,29 @@ const AddTask = () => {
     }
   };
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     if (!user) {
       alert('User not found');
       return;
     }
-
+  
+    // Flatten the slots object into an array and include the dayOfWeek field
+    const flattenedSlots = Object.keys(schedules).flatMap(day => 
+      schedules[day].map((slot: any) => ({ ...slot, dayOfWeek: day }))
+    );
+  
     try {
+      const payload = { userId: user.userId, professionalId, slots: flattenedSlots }; // Ensure slots are included in the payload
+      console.log('Payload:', payload); // Log the payload to ensure professionalId is included
+  
       const response = await fetch('https://medplus-health.onrender.com/api/schedule', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: user.userId, schedules }), // Send schedules with recurrence pattern
+        body: JSON.stringify(payload), // Include professionalId in the payload
       });
-
+  
       if (response.ok) {
         alert('Schedules have been submitted successfully!');
         persistSchedules(schedules); // Persist schedules after successful submission
@@ -249,7 +268,6 @@ const AddTask = () => {
       alert('An error occurred while submitting schedules');
     }
   };
-
   const renderSlot = ({ item }: { item: any }) => (
     <View style={styles.slotCard}>
       <Text style={styles.slotText}>
