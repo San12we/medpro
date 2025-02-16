@@ -1,3 +1,5 @@
+import { orange700 } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
+
 export default {
     white: '#ffffff',
     primary: '#002D62',
@@ -9,6 +11,8 @@ export default {
     lit: '#FBFF8F',
     light_gray: '#dce775',
     selectedBackground: '#91d690',
+    orange700: '#f57c00',
+    blue30: '#e3f2fd',
     gray: '#388e3c',
     goofy: '#8bffff',
     background: '#F8F9FA', // Background color used in scrollContainer

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import LottieView from 'lottie-react-native'; // For modern animations
-import Colors from './path-to-your-colors-file'; // Adjust the import path
+import Colors from '@/components/Shared/Colors';
+
 
 const LoadingScreen = ({ message = "Loading..." }) => {
   const [loading, setLoading] = useState(true);
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.orange70, // Use your preferred background color
+    backgroundColor: Colors.orange700, // Use your preferred background color
   },
   loadingContainer: {
     alignItems: 'center',
