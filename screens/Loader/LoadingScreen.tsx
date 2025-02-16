@@ -1,24 +1,64 @@
-import React, {Component} from 'react';
-import {View, Text, LoaderScreen, Colors} from 'react-native-ui-lib';
-export default class LoadingScreen extends Component {
-  state = {
-    loading: true
-  };
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import LottieView from 'lottie-react-native'; // For modern animations
+import Colors from './path-to-your-colors-file'; // Adjust the import path
 
-  componentDidMount() {
-    setTimeout(() => {
-      this.setState({loading: false});
+const LoadingScreen = ({ message = "Loading..." }) => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
     }, 2500);
-  }
 
-  render() {
-    const {loading} = this.state;
-    const {message} = this.props; // Accept message prop
-    return (
-      <View flex bg-orange70 center>
-        <Text text10>Content Content Content</Text>
-        {loading && <LoaderScreen color={Colors.blue30} message={message || "Loading..."} overlay/>}
-      </View>
-    );
-  }
-}
+    return () => clearTimeout(timer); // Cleanup timer
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          {/* Modern Lottie Animation */}
+          <LottieView
+            source={require('../../assets/animation/loading2.json')} // Replace with your Lottie animation file
+            autoPlay
+            loop
+            style={styles.animation}
+          />
+          <Text style={styles.loadingText}>{message}</Text>
+        </View>
+      ) : (
+        <Text style={styles.contentText}>Ready!</Text>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.orange70, // Use your preferred background color
+  },
+  loadingContainer: {
+    alignItems: 'center',
+  },
+  animation: {
+    width: 150,
+    height: 150,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: Colors.blue30, // Use your preferred text color
+    fontWeight: 'bold',
+  },
+  contentText: {
+    fontSize: 18,
+    color: Colors.primary, // Use your preferred text color
+    fontWeight: 'bold',
+  },
+});
+
+export default LoadingScreen;
